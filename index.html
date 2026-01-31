@@ -1,352 +1,377 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Matīt Clicker - Fixed & Squishy</title>
+  <title>Matīt Clicker</title>
+  <style> 
+    /* --- BASE STYLES --- */
+    body { 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      justify-content: center; 
+      min-height: 100vh; 
+      margin: 0; 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      background-color: #b3abab; 
+      user-select: none; 
+      overflow: hidden; 
+    } 
 
-  <style>
-    /* --- BASE STYLES --- 
-       Centers the game and keeps it tidy. */
-    body {
+    /* --- MAIN BUTTON (THE MATĪT) --- */
+    #addPoint { 
+      cursor: pointer; 
+      height: 40vh; 
+      margin: 20px 0; 
+      transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+      -webkit-user-drag: none; 
+      z-index: 5; 
+    } 
+    #addPoint:active { transform: scale(0.9); } 
+
+    /* --- SHOP OPENER --- */
+    .shop-btn { 
+      background: none; 
+      border: none; 
+      cursor: pointer; 
+      padding: 10px; 
+      transition: transform 0.2s; 
+      z-index: 10; 
+    } 
+    .shop-btn:hover { transform: scale(1.1); } 
+    .shop-icon { height: 60px; width: auto; } 
+
+    /* --- THE SHOP MENU --- */
+    #shopMenu { 
+      display: none; 
+      position: fixed; 
+      top: 50%; 
+      left: 50%; 
+      transform: translate(-50%, -50%); 
+      width: 70vh;  
+      max-width: 90vw; 
+      height: 70vh; 
+      background-color: #d1cbcb; 
+      border: 5px solid #444; 
+      border-radius: 20px; 
+      z-index: 100; 
+      padding: 25px; 
+      box-shadow: 0 0 60px rgba(0,0,0,0.6); 
+      box-sizing: border-box; 
+      overflow-y: auto; 
+    } 
+
+    #closeShop { 
+      position: absolute; 
+      top: 15px; 
+      right: 25px; 
+      font-size: 35px; 
+      font-weight: bold; 
+      cursor: pointer; 
+      color: #444; 
+      z-index: 101;
+    } 
+
+    .shop-nav {
       display: flex;
-      flex-direction: column;
-      align-items: center;
       justify-content: center;
-      min-height: 100vh;
-      margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #b3abab;
-      user-select: none;
-      overflow: hidden;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #999;
+      padding-bottom: 15px;
     }
 
-    /* --- MAIN BUTTON (THE MATĪT) --- 
-       Handles the look and the squish of the central image. */
-    #addPoint {
-      cursor: pointer;
-      height: 40vh;
-      margin: 20px 0;
-      transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      -webkit-user-drag: none;
-      z-index: 5;
-    }
-    #addPoint:active {
-      transform: scale(0.9); /* Makes it feel very responsive */
-    }
-
-    /* --- SHOP OPENER --- 
-       The small button that triggers the menu. */
-    .shop-btn {
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 10px;
-      transition: transform 0.2s;
-      z-index: 10;
-    }
-    .shop-btn:hover { transform: scale(1.1); }
-    .shop-icon { height: 60px; width: auto; }
-
-    /* --- THE SHOP MENU (SQUARE) --- 
-       Includes 'overflow-y: auto' so if you add 100 upgrades, 
-       you can scroll down to see them all. */
-    #shopMenu {
-      display: none;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 70vh; 
-      max-width: 90vw;
-      height: 70vh;
-      background-color: #d1cbcb;
-      border: 5px solid #444;
-      border-radius: 20px;
-      z-index: 100;
-      padding: 25px;
-      box-shadow: 0 0 60px rgba(0,0,0,0.6);
-      box-sizing: border-box;
-      overflow-y: auto; /* CRITICAL: Allows scrolling for new upgrades */
-    }
-
-    #closeShop {
-      position: absolute;
-      top: 15px;
-      right: 25px;
-      font-size: 35px;
-      font-weight: bold;
-      cursor: pointer;
-      color: #444;
-    }
-
-    /* --- UPGRADE ROW STYLING --- 
-       Separates the info from the purchase buttons. */
-    .upgrade-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: rgba(255, 255, 255, 0.3);
-      padding: 15px;
-      border-radius: 12px;
-      margin-bottom: 15px;
-      border: 2px solid #999;
-    }
-    .upgrade-info b { font-size: 1.3rem; display: block; }
-    .upgrade-info span { font-size: 1rem; color: #222; }
-
-    .upgrade-right {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-    .upgrade-img { 
-      height: 50px; 
-      width: 50px; 
-      border-radius: 8px; 
-      background: #888; /* Fallback if image/video fails */
-      object-fit: cover;
-    }
-
-    /* --- FIXED SQUISHY BUY BUTTON --- 
-       I removed the slow transitions that were eating your clicks. 
-       Now it uses a 3D shadow effect that flattens when pressed. */
-    .buy-btn {
-      background-color: #4CAF50;
+    .nav-btn {
+      background-color: #7a7a7a; 
       color: white;
       border: none;
-      padding: 12px 18px;
-      border-radius: 10px;
+      padding: 10px 15px;
+      border-radius: 8px;
       font-weight: bold;
       cursor: pointer;
-      font-size: 1rem;
-      position: relative;
-      /* The 3D Shadow */
-      box-shadow: 0 5px 0 #2e6631;
-      transition: none; /* Instant feedback feels more 'responsive' */
+      box-shadow: 0 4px 0 #444;
     }
+    .nav-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #444; }
 
-    .buy-btn:hover:not(:disabled) {
-      background-color: #45a049;
-      transform: translateY(-2px);
-      box-shadow: 0 7px 0 #2e6631;
-    }
+    .tab-content { display: none; }
+    .active-tab { display: block; }
 
-    /* THE SQUISH: Moves the button down and hides the shadow */
-    .buy-btn:active:not(:disabled) {
-      transform: translateY(4px);
-      box-shadow: 0 1px 0 #2e6631;
-    }
+    .upgrade-item { 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      background: rgba(255, 255, 255, 0.3); 
+      padding: 15px; 
+      border-radius: 12px; 
+      margin-bottom: 15px; 
+      border: 2px solid #999; 
+    } 
+    .upgrade-info b { font-size: 1.3rem; display: block; } 
+    .upgrade-info span { font-size: 1rem; color: #222; } 
 
-    .buy-btn:disabled {
-      background-color: #888;
-      box-shadow: none;
-      cursor: not-allowed;
-      transform: none;
-    }
+    .upgrade-right { display: flex; align-items: center; gap: 15px; } 
+    .upgrade-img { height: 50px; width: 50px; border-radius: 8px; background: #888; object-fit: cover; } 
 
-    /* --- VIDEO MOVEMENT STYLE --- */
-    .running-matit-video {
-      position: fixed;
-      width: 120px;
-      height: auto;
-      pointer-events: none;
-      z-index: 1;
-    }
-/* --- FIXED FLOATING IMAGE SIZE --- */
-.plus-one img {
-  height: 30px; /* Adjust this to make the flying image bigger or smaller */
-  width: auto;
-  vertical-align: middle;
-  margin-left: 5px;
-}
+    .buy-btn { 
+      background-color: #4CAF50; 
+      color: white; 
+      border: none; 
+      padding: 12px 18px; 
+      border-radius: 10px; 
+      font-weight: bold; 
+      cursor: pointer; 
+      position: relative; 
+      box-shadow: 0 5px 0 #2e6631; 
+    } 
+    .buy-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 7px 0 #2e6631; } 
+    .buy-btn:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 1px 0 #2e6631; } 
+    .buy-btn:disabled { background-color: #888; box-shadow: none; cursor: not-allowed; transform: none; } 
 
-    /* --- FLOATING TEXT --- */
-    .plus-one {
-      position: absolute;
-      font-size: 26px;
-      font-weight: bold;
-      pointer-events: none;
-      animation: floatUp 0.8s ease-out forwards;
-      z-index: 20;
-    }
-    @keyframes floatUp {
-      from { opacity: 1; transform: translate(-50%, -50%); }
-      to { transform: translate(calc(-50% + var(--x)), -150px); opacity: 0; }
-    }
-  </style>
-</head>
+    .running-matit-video { position: fixed; width: 120px; pointer-events: none; z-index: 1; } 
+    .plus-one img { height: 30px; width: auto; vertical-align: middle; margin-left: 5px; } 
+    .plus-one { position: absolute; font-size: 26px; font-weight: bold; pointer-events: none; animation: floatUp 0.8s ease-out forwards; z-index: 20; } 
+    @keyframes floatUp { 
+      from { opacity: 1; transform: translate(-50%, -50%); } 
+      to { transform: translate(calc(-50% + var(--x)), -150px); opacity: 0; } 
+    } 
+  </style> 
+</head> 
 
-<body>
-  <h1>Matīt clicker</h1>
-  <p>Click the Matīt</p>
+<body> 
+  <h1>Matīt clicker</h1> 
+  <p>Click the Matīt</p> 
 
-  <img id="addPoint" src="button1.jpg" alt="Add point" draggable="false">
+  <img id="addPoint" src="button1.jpg" alt="Add point" draggable="false"> 
 
-  <p style="font-size: 1.8rem; margin-bottom: 5px; font-weight: bold;">€: <span id="score">0.0</span></p>
-  <p style="font-size: 1.1rem; color: #222; margin-top: 0;">Income: €/s <span id="income">0.0</span></p>
+  <p style="font-size: 1.8rem; margin-bottom: 5px; font-weight: bold;">€: <span id="score">0.0</span></p> 
+  <p style="font-size: 1.1rem; color: #222; margin-top: 0;">Income: €/s <span id="income">0.0</span></p> 
 
-  <button id="openShop" class="shop-btn">
-    <img src="shop.png" class="shop-icon" draggable="false">
-  </button>
+  <button id="openShop" class="shop-btn"> 
+    <img src="shop.png" class="shop-icon" draggable="false"> 
+  </button> 
 
-  <div id="shopMenu">
-    <span id="closeShop">&times;</span>
-    <h2 style="text-align: center; margin-top: 0;">Shop</h2>
-    <hr>
-    
-    <div class="upgrade-item">
-      <div class="upgrade-info">
-        <b>Autoclicker</b>
-        <span>+0.1€ per sec</span>
+  <div id="shopMenu"> 
+    <span id="closeShop">&times;</span> 
+
+    <div class="shop-nav">
+      <button class="nav-btn" onclick="showTab('shopTab')">Shop</button>
+      <button id="musicNavBtn" class="nav-btn" style="display: none;" onclick="showTab('musicTab')">Music</button>
+      <button id="casinoNavBtn" class="nav-btn" style="display: none;" onclick="showTab('casinoTab')">Casino</button>
+    </div>
+
+    <div id="shopTab" class="tab-content active-tab">
+      <h2 style="text-align: center; margin-top: 0;">Upgrades</h2> 
+      <hr> 
+      
+      <div class="upgrade-item"> 
+        <div class="upgrade-info"><b>Autoclicker</b><span>+0.1€ per sec</span></div> 
+        <div class="upgrade-right">
+          <img src="autoclicker.png" class="upgrade-img">
+          <button id="buyAutoclicker" class="buy-btn">30€</button>
+        </div> 
       </div>
-      <div class="upgrade-right">
-        <img src="autoclicker.png" class="upgrade-img">
-        <button id="buyAutoclicker" class="buy-btn">30€</button>
+
+      <div class="upgrade-item"> 
+        <div class="upgrade-info"><b>Running Matīt</b><span>2X Multiplier (Max 6)</span></div> 
+        <div class="upgrade-right">
+          <video src="run.mp4" class="upgrade-img" muted loop autoplay></video> 
+          <button id="buyRunning" class="buy-btn">300€</button>
+        </div> 
+      </div>
+
+      <div class="upgrade-item" id="musicUpgradeRow">
+        <div class="upgrade-info"><b>Unlock Music</b><span>Gain access to Music Tab</span></div>
+        <div class="upgrade-right">
+          <div class="upgrade-img" style="display:flex;align-items:center;justify-content:center;font-size:24px;">🎵</div>
+          <button id="buyMusic" class="buy-btn">1000€</button>
+        </div>
+      </div>
+
+      <div class="upgrade-item" id="casinoUpgradeRow">
+        <div class="upgrade-info"><b>Unlock Casino</b><span>Gain access to Casino + 1.5X Mult</span></div>
+        <div class="upgrade-right">
+          <div class="upgrade-img" style="display:flex;align-items:center;justify-content:center;font-size:24px;">🎲</div>
+          <button id="buyCasino" class="buy-btn">5000€</button>
+        </div>
       </div>
     </div>
 
-    <div class="upgrade-item">
-      <div class="upgrade-info">
-        <b>Running Matīt</b>
-        <span>2X Multiplier (Max 6)</span>
-      </div>
-      <div class="upgrade-right">
-        <video src="run.mp4" class="upgrade-img" muted loop autoplay></video>
-        <button id="buyRunning" class="buy-btn">300€</button>
-      </div>
+    <div id="musicTab" class="tab-content">
+      <h2 style="text-align: center;">Music Player</h2>
+      <p style="text-align: center; color: #555;">Music tracks will appear here soon...</p>
     </div>
-  </div>
 
-  <script>
+    <div id="casinoTab" class="tab-content">
+      <h2 style="text-align: center;">Matīt Casino</h2>
+      <p style="text-align: center; color: #555;">The casino is now open! Coin flip coming soon.</p>
+    </div>
+  </div> 
+
+  <script> 
     /* --- GAME STORAGE --- */
-    let score = 0;
-    let autoClickers = 0;
-    let multiplier = 1;
-    let runningMatitsOwned = 0;
-    
-    const cheatCode = "ztmy";
-    let userInput = "";
+    let score = 0; 
+    let autoClickers = 0; 
+    let multiplier = 1; 
+    let runningMatitsOwned = 0; 
+    let musicUnlocked = false;
+    let casinoUnlocked = false;
+    const cheatCode = "ztmy"; 
+    let userInput = ""; 
 
     /* --- ELEMENT LINKS --- */
-    const scoreDisplay = document.getElementById("score");
-    const incomeDisplay = document.getElementById("income");
+    const scoreDisplay = document.getElementById("score"); 
+    const incomeDisplay = document.getElementById("income"); 
     const buyAutoclickerBtn = document.getElementById("buyAutoclicker");
-    const buyRunningBtn = document.getElementById("buyRunning");
-    const shopMenu = document.getElementById("shopMenu");
+    const buyRunningBtn = document.getElementById("buyRunning"); 
+    const buyMusicBtn = document.getElementById("buyMusic");
+    const buyCasinoBtn = document.getElementById("buyCasino");
+    const shopMenu = document.getElementById("shopMenu"); 
 
-    /* --- INTERFACE UPDATE --- 
-       Runs after every action to keep the screen accurate. */
+    /* --- TAB SWITCHING LOGIC --- */
+    function showTab(tabId) {
+      const contents = document.getElementsByClassName('tab-content');
+      for (let content of contents) { 
+        content.classList.remove('active-tab'); 
+      }
+      document.getElementById(tabId).classList.add('active-tab');
+    }
+
+    /* --- DISPLAY REFRESH (Handles Nav visibility) --- */
     function updateDisplay() {
-      scoreDisplay.textContent = score.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1});
+      scoreDisplay.textContent = score.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1}); 
       
-      let currentIncome = (autoClickers * 0.1) * multiplier;
-      incomeDisplay.textContent = currentIncome.toFixed(1);
+      let currentIncome = ((autoClickers * 0.1) + (runningMatitsOwned * 1)) * multiplier; 
+      incomeDisplay.textContent = currentIncome.toFixed(1); 
       
-      // Handle button colors/states
+      // Basic Upgrade Buttons
       buyAutoclickerBtn.disabled = score < 30;
-      
-      if (runningMatitsOwned >= 6) {
-        buyRunningBtn.textContent = "SOLD OUT";
-        buyRunningBtn.disabled = true;
+      if (runningMatitsOwned >= 6) { 
+        buyRunningBtn.textContent = "SOLD OUT"; 
+        buyRunningBtn.disabled = true; 
+      } else { 
+        buyRunningBtn.disabled = score < 300; 
+      }
+
+      // Music Nav & Button Visibility
+      const musicNav = document.getElementById("musicNavBtn");
+      if (musicUnlocked) {
+        musicNav.style.display = "inline-block"; 
+        buyMusicBtn.textContent = "UNLOCKED";
+        buyMusicBtn.disabled = true;
       } else {
-        buyRunningBtn.disabled = score < 300;
+        musicNav.style.display = "none";
+        buyMusicBtn.disabled = score < 1000;
+      }
+
+      // Casino Nav & Button Visibility
+      const casinoNav = document.getElementById("casinoNavBtn");
+      if (casinoUnlocked) {
+        casinoNav.style.display = "inline-block";
+        buyCasinoBtn.textContent = "UNLOCKED";
+        buyCasinoBtn.disabled = true;
+      } else {
+        casinoNav.style.display = "none";
+        buyCasinoBtn.disabled = score < 5000;
       }
     }
 
     /* --- CLICKING LOGIC --- */
-    document.getElementById("addPoint").addEventListener("mousedown", (e) => {
-      score += (1 * multiplier);
-      updateDisplay();
+    document.getElementById("addPoint").addEventListener("mousedown", (e) => { 
+      score += (1 * multiplier); 
+      updateDisplay(); 
+      const popup = document.createElement("div"); 
+      popup.className = "plus-one"; 
+      popup.innerHTML = `+${(1 * multiplier).toFixed(0)} <img src="button1.jpg">`; 
+      popup.style.setProperty("--x", (Math.random() * 80 - 40) + "px"); 
+      popup.style.left = e.clientX + "px"; 
+      popup.style.top = e.clientY + "px"; 
+      document.body.appendChild(popup); 
+      setTimeout(() => popup.remove(), 800); 
+    }); 
 
-      // Spawn floating text
-      const popup = document.createElement("div");
-      popup.className = "plus-one";
-      popup.innerHTML = `+${(1 * multiplier).toFixed(0)} <img src="button1.jpg">`;
-      popup.style.setProperty("--x", (Math.random() * 80 - 40) + "px");
-      popup.style.left = e.clientX + "px";
-      popup.style.top = e.clientY + "px";
-      document.body.appendChild(popup);
-      setTimeout(() => popup.remove(), 800);
+    /* --- SHOP PURCHASES --- */
+    buyAutoclickerBtn.addEventListener("click", () => { 
+      if (score >= 30) { 
+        score -= 30; 
+        autoClickers++; 
+        updateDisplay(); 
+      } 
     });
 
-    /* --- BUYING AUTOCLICKERS --- */
-    buyAutoclickerBtn.addEventListener("click", () => {
-      if (score >= 30) {
-        score -= 30;
-        autoClickers++;
+    buyRunningBtn.addEventListener("click", () => { 
+      if (score >= 300 && runningMatitsOwned < 6) { 
+        score -= 300; 
+        if (runningMatitsOwned === 0) multiplier = 2; 
+        runningMatitsOwned++; 
+        spawnRunningVideo(); 
+        updateDisplay(); 
+      } 
+    });
+
+    buyMusicBtn.addEventListener("click", () => {
+      if (score >= 1000 && !musicUnlocked) {
+        score -= 1000;
+        musicUnlocked = true;
         updateDisplay();
       }
     });
 
-    /* --- BUYING RUNNING MATĪTS --- */
-    buyRunningBtn.addEventListener("click", () => {
-      if (score >= 300 && runningMatitsOwned < 6) {
-        score -= 300;
-        if (runningMatitsOwned === 0) multiplier = 2; // Only double on first purchase
-        runningMatitsOwned++;
-        spawnRunningVideo();
+    buyCasinoBtn.addEventListener("click", () => {
+      if (score >= 5000 && !casinoUnlocked) {
+        score -= 5000;
+        casinoUnlocked = true;
+        multiplier *= 1.5; 
         updateDisplay();
       }
     });
-
-    /* --- PERIMETER VIDEO SYSTEM --- 
-       Calculates screen edges and sends videos on a loop around them. */
-    function spawnRunningVideo() {
-      const vid = document.createElement("video");
-      vid.src = "run.mp4";
-      vid.className = "running-matit-video";
-      vid.loop = true; vid.muted = true; vid.autoplay = true;
-      document.body.appendChild(vid);
-
-      let speed = Math.random() * 8 + 2; // Random speed for each video
-      let travel = Math.random() * 2000; // Random start position
-
-      function animate() {
-        const w = window.innerWidth;
-        const h = window.innerHeight;
-        const total = (w + h) * 2;
-        travel = (travel + speed) % total;
-
-        let x, y, rot;
-        if (travel < w) { // Top
-          x = travel; y = 0; rot = 180;
-        } else if (travel < w + h) { // Right
-          x = w - 100; y = travel - w; rot = 270;
-        } else if (travel < w * 2 + h) { // Bottom
-          x = w - (travel - (w + h)) - 100; y = h - 100; rot = 0;
-        } else { // Left
-          x = 0; y = h - (travel - (w * 2 + h)) - 100; rot = 90;
-        }
-
-        vid.style.left = x + "px";
-        vid.style.top = y + "px";
-        vid.style.transform = `rotate(${rot}deg)`;
-        requestAnimationFrame(animate);
-      }
-      animate();
-    }
 
     /* --- PASSIVE INCOME LOOP --- */
-    setInterval(() => {
-      if (autoClickers > 0) {
-        score += (autoClickers * 0.1) * multiplier;
-        updateDisplay();
-      }
+    setInterval(() => { 
+      let totalBaseIncome = (autoClickers * 0.1) + (runningMatitsOwned * 1.0);
+      if (totalBaseIncome > 0) { 
+        score += totalBaseIncome * multiplier; 
+        updateDisplay(); 
+      } 
     }, 1000);
 
-    /* --- SHOP VISIBILITY --- */
-    document.getElementById("openShop").addEventListener("click", () => { shopMenu.style.display = "block"; });
-    document.getElementById("closeShop").addEventListener("click", () => { shopMenu.style.display = "none"; });
+    /* --- VIDEO SYSTEM --- */
+    function spawnRunningVideo() { 
+      const vid = document.createElement("video"); 
+      vid.src = "run.mp4"; 
+      vid.className = "running-matit-video"; 
+      vid.loop = true; vid.muted = true; vid.autoplay = true; 
+      document.body.appendChild(vid); 
 
-    /* --- CHEAT CODE (ztmy) --- */
-    window.addEventListener("keydown", (e) => {
-      userInput += e.key.toLowerCase();
-      if (userInput.length > 4) userInput = userInput.substring(userInput.length - 4);
-      if (userInput === cheatCode) {
-        score += 10000000;
-        updateDisplay();
-        userInput = "";
-      }
-    });
-  </script>
-</body>
+      let speed = Math.random() * 8 + 2; 
+      let travel = Math.random() * 2000; 
+
+      function animate() { 
+        const w = window.innerWidth; 
+        const h = window.innerHeight; 
+        const total = (w + h) * 2; 
+        travel = (travel + speed) % total; 
+        let x, y, rot; 
+        if (travel < w) { x = travel; y = 0; rot = 180; } 
+        else if (travel < w + h) { x = w - 100; y = travel - w; rot = 270; } 
+        else if (travel < w * 2 + h) { x = w - (travel - (w + h)) - 100; y = h - 100; rot = 0; } 
+        else { x = 0; y = h - (travel - (w * 2 + h)) - 100; rot = 90; } 
+        vid.style.left = x + "px"; 
+        vid.style.top = y + "px"; 
+        vid.style.transform = `rotate(${rot}deg)`; 
+        requestAnimationFrame(animate); 
+      } 
+      animate(); 
+    } 
+
+    /* --- UI TOGGLES --- */
+    document.getElementById("openShop").addEventListener("click", () => { shopMenu.style.display = "block"; }); 
+    document.getElementById("closeShop").addEventListener("click", () => { shopMenu.style.display = "none"; }); 
+
+    /* --- CHEAT CODE --- */
+    window.addEventListener("keydown", (e) => { 
+      userInput += e.key.toLowerCase(); 
+      if (userInput.length > 4) userInput = userInput.substring(userInput.length - 4); 
+      if (userInput === cheatCode) { score += 10000000; updateDisplay(); userInput = ""; } 
+    }); 
+  </script> 
+</body> 
 </html>
