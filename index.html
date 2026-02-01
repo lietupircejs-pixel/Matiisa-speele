@@ -133,6 +133,29 @@
       from { opacity: 1; transform: translate(-50%, -50%); } 
       to { transform: translate(calc(-50% + var(--x)), -150px); opacity: 0; } 
     } 
+
+    /* --- CHANGED: Flying Golden Button Styles --- */
+.flying-button {
+  position: fixed;
+  width: 80px;
+  height: 80px;
+  cursor: pointer;
+  z-index: 200;
+  transition: opacity 0.5s ease-out, transform 0.1s;
+  animation: spin 3s linear infinite;
+  border-radius: 50%;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.fade-out {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(2) rotate(720deg) !important;
+}
   </style> 
 </head> 
 
@@ -200,29 +223,27 @@
       <p style="text-align: center; color: #555;">Music tracks will appear here soon...</p>
     </div>
 
-    <div id="casinoTab" class="tab-content">
-      <h2 style="text-align: center;">Book of Matīt</h2>
-      <div style="text-align: center; margin-bottom: 10px;">
-        <p style="display: inline-block; margin: 0 15px;">Standard: <b>250€</b></p>
-        <p style="display: inline-block; margin: 0 15px; color: #b33939;">Max Bet: <b>1,000€</b></p>
-      </div>
-      
-      <div style="display: flex; justify-content: center; gap: 15px; margin: 20px 0;">
-        <img id="reel1" src="image1.jpg" style="width: 80px; height: 80px; border: 3px solid #444; border-radius: 10px;">
-        <img id="reel2" src="image2.jpg" style="width: 80px; height: 80px; border: 3px solid #444; border-radius: 10px;">
-        <img id="reel3" src="image3.jpg" style="width: 80px; height: 80px; border: 3px solid #444; border-radius: 10px;">
-      </div>
-
-      <div style="text-align: center; display: flex; flex-direction: column; gap: 10px; align-items: center;">
-        <button id="spinBtn" class="buy-btn" style="background-color: #e67e22; box-shadow: 0 5px 0 #a05817; width: 200px;">SPIN (250€)</button>
-        <button id="maxSpinBtn" class="buy-btn" style="background-color: #b33939; box-shadow: 0 5px 0 #822727; width: 200px;">MAX BET (1,000€)</button>
-        <p id="slotMessage" style="font-weight: bold; margin-top: 15px; min-height: 1.2em;"></p>
-      </div>
-    </div>
+ <div id="casinoTab" class="tab-content">
+  <h2 style="text-align: center;">Book of Matīt</h2>
+  <div style="text-align: center; margin-bottom: 10px;">
+    <p>Enter your wager:</p>
+    <input type="number" id="betAmount" value="250" min="1" style="padding: 10px; border-radius: 5px; border: 1px solid #444; width: 100px; text-align: center;">
+  </div>
+  
+  <div style="display: flex; justify-content: center; gap: 15px; margin: 20px 0;">
+    <img id="reel1" src="image1.jpg" style="width: 80px; height: 80px; border: 3px solid #444; border-radius: 10px;">
+    <img id="reel2" src="image2.jpg" style="width: 80px; height: 80px; border: 3px solid #444; border-radius: 10px;">
+    <img id="reel3" src="image3.jpg" style="width: 80px; height: 80px; border: 3px solid #444; border-radius: 10px;">
   </div>
 
-  <script> 
-    /* --- GAME STORAGE --- */
+  <div style="text-align: center;">
+    <button id="spinBtn" class="buy-btn" style="background-color: #e67e22; box-shadow: 0 5px 0 #a05817; width: 200px;">SPIN!</button>
+    <button id="allInBtn" class="buy-btn" style="background-color: #7d5fff; box-shadow: 0 5px 0 #5740b3; width: 100px;">ALL IN</button>
+    <p id="slotMessage" style="font-weight: bold; margin-top: 15px; min-height: 1.2em;"></p>
+  </div>
+</div>
+
+<script> 
     let score = 0; 
     let autoClickers = 0; 
     let multiplier = 1; 
@@ -232,7 +253,6 @@
     const cheatCode = "ztmy"; 
     let userInput = ""; 
 
-    /* --- ELEMENTS --- */
     const scoreDisplay = document.getElementById("score"); 
     const incomeDisplay = document.getElementById("income"); 
     const buyAutoclickerBtn = document.getElementById("buyAutoclicker");
@@ -241,40 +261,41 @@
     const buyCasinoBtn = document.getElementById("buyCasino");
     const shopMenu = document.getElementById("shopMenu");
     const spinBtn = document.getElementById("spinBtn");
-    const maxSpinBtn = document.getElementById("maxSpinBtn");
+    const allInBtn = document.getElementById("allInBtn");
+    const betInput = document.getElementById("betAmount");
     const slotMessage = document.getElementById("slotMessage");
     const reels = [document.getElementById("reel1"), document.getElementById("reel2"), document.getElementById("reel3")];
     const casinoSound = document.getElementById("casinoSound");
     const aahSound = document.getElementById("aahSound");
-    const jackpotSound = document.getElementById("jackpotSound");
     const symbols = ["image1.jpg", "image2.jpg", "image3.jpg", "button1.jpg"];
 
-    /* --- UI FUNCTIONS --- */
     function showTab(tabId) {
       const contents = document.getElementsByClassName('tab-content');
       for (let content of contents) content.classList.remove('active-tab');
       document.getElementById(tabId).classList.add('active-tab');
     }
 
+    function playRandomJackpot() {
+        const randomNum = Math.floor(Math.random() * 4) + 1;
+        const sound = new Audio(`jackpot${randomNum}.mp3`);
+        sound.play();
+    }
+
+    allInBtn.onclick = () => { betInput.value = Math.floor(score); };
+
     function updateDisplay() {
       scoreDisplay.textContent = score.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1}); 
       let currentIncome = ((autoClickers * 0.1) + (runningMatitsOwned * 1)) * multiplier; 
       incomeDisplay.textContent = currentIncome.toFixed(1); 
-      
       buyAutoclickerBtn.disabled = score < 30;
       buyRunningBtn.disabled = score < 300 || runningMatitsOwned >= 6;
       if (runningMatitsOwned >= 6) buyRunningBtn.textContent = "SOLD OUT";
-
       document.getElementById("musicNavBtn").style.display = musicUnlocked ? "inline-block" : "none";
       buyMusicBtn.disabled = score < 1000 || musicUnlocked;
-      if (musicUnlocked) buyMusicBtn.textContent = "UNLOCKED";
-
       document.getElementById("casinoNavBtn").style.display = casinoUnlocked ? "inline-block" : "none";
       buyCasinoBtn.disabled = score < 5000 || casinoUnlocked;
-      if (casinoUnlocked) buyCasinoBtn.textContent = "UNLOCKED";
     }
 
-    /* --- CORE CLICKING --- */
     document.getElementById("addPoint").addEventListener("mousedown", (e) => { 
       score += (1 * multiplier); 
       updateDisplay(); 
@@ -288,96 +309,82 @@
       setTimeout(() => popup.remove(), 800); 
     }); 
 
-    /* --- PURCHASES --- */
-    buyAutoclickerBtn.addEventListener("click", () => { if (score >= 30) { score -= 30; autoClickers++; updateDisplay(); } });
-    buyRunningBtn.addEventListener("click", () => { if (score >= 300 && runningMatitsOwned < 6) { score -= 300; if (runningMatitsOwned === 0) multiplier = 2; runningMatitsOwned++; spawnRunningVideo(); updateDisplay(); } });
-    buyMusicBtn.addEventListener("click", () => { if (score >= 1000 && !musicUnlocked) { score -= 1000; musicUnlocked = true; updateDisplay(); } });
-    buyCasinoBtn.addEventListener("click", () => { if (score >= 5000 && !casinoUnlocked) { score -= 5000; casinoUnlocked = true; multiplier *= 1.5; updateDisplay(); } });
+    buyAutoclickerBtn.onclick = () => { if (score >= 30) { score -= 30; autoClickers++; updateDisplay(); } };
+    buyRunningBtn.onclick = () => { if (score >= 300 && runningMatitsOwned < 6) { score -= 300; if (runningMatitsOwned === 0) multiplier = 2; runningMatitsOwned++; spawnRunningVideo(); updateDisplay(); } };
+    buyMusicBtn.onclick = () => { if (score >= 1000 && !musicUnlocked) { score -= 1000; musicUnlocked = true; updateDisplay(); } };
+    buyCasinoBtn.onclick = () => { if (score >= 5000 && !casinoUnlocked) { score -= 5000; casinoUnlocked = true; multiplier *= 1.5; updateDisplay(); } };
 
-    /* --- PASSIVE INCOME --- */
     setInterval(() => { 
       let totalBaseIncome = (autoClickers * 0.1) + (runningMatitsOwned * 1.0);
       if (totalBaseIncome > 0) { score += totalBaseIncome * multiplier; updateDisplay(); } 
     }, 1000);
 
-    /* --- SLOT MACHINE LOGIC --- */
-    function runSlotMachine(isMaxBet) {
-      const cost = isMaxBet ? 1000 : 250;
-      if (score < cost) { alert("You need " + cost + "€!"); return; }
+    spinBtn.onclick = () => {
+        const wager = parseInt(betInput.value);
+        if (isNaN(wager) || wager <= 0) { alert("Enter a valid bet!"); return; }
+        if (score < wager) { alert("You don't have enough money!"); return; }
 
-      score -= cost;
-      updateDisplay();
-      spinBtn.disabled = true;
-      maxSpinBtn.disabled = true;
-      slotMessage.textContent = "Good luck...";
-      slotMessage.style.color = "#444";
-      casinoSound.currentTime = 0;
-      casinoSound.play();
+        score -= wager;
+        updateDisplay();
+        spinBtn.disabled = true;
+        slotMessage.textContent = "Spinning...";
+        slotMessage.style.color = "#444";
+        casinoSound.currentTime = 0;
+        casinoSound.play();
 
-      // Math Logic inside the function
-      let rng = Math.random();
-      let winAmount = 0;
-      let finalSymbols = [];
+        let rng = Math.random();
+        let winAmount = 0;
+        let finalSymbols = [];
 
-      if (rng < 0.05) {
-        winAmount = isMaxBet ? 25000 : 1000;
-        finalSymbols = ["button1.jpg", "button1.jpg", "button1.jpg"];
-      } else if (rng < 0.45) {
-        winAmount = isMaxBet ? 5000 : 500;
-        let picked = symbols[Math.floor(Math.random() * 3)];
-        finalSymbols = [picked, picked, picked];
-      } else {
-        winAmount = 0;
-        finalSymbols = ["image1.jpg", "image2.jpg", "image3.jpg"].sort(() => Math.random() - 0.5);
-      }
-
-      let ticks = 0;
-      const maxTicks = 40;
-      let interval = setInterval(() => {
-        ticks++;
-        if (ticks <= 20) reels[0].src = symbols[Math.floor(Math.random() * 4)];
-        if (ticks <= 30) reels[1].src = symbols[Math.floor(Math.random() * 4)];
-        if (ticks <= 40) reels[2].src = symbols[Math.floor(Math.random() * 4)];
-
-        if (ticks === 20) reels[0].src = finalSymbols[0];
-        if (ticks === 30) reels[1].src = finalSymbols[1];
-
-        if (ticks >= maxTicks) {
-          clearInterval(interval);
-          reels[2].src = finalSymbols[2];
-          casinoSound.pause();
-
-          if (winAmount > 0) {
-            jackpotSound.currentTime = 0;
-            jackpotSound.play();
-            slotMessage.textContent = (winAmount >= 10000 ? "MEGA JACKPOT! +" : "WINNER! +") + winAmount + "€";
-            slotMessage.style.color = winAmount >= 10000 ? "gold" : "green";
-          } else {
-            aahSound.currentTime = 0;
-            aahSound.play();
-            slotMessage.textContent = "Better luck next time!";
-            slotMessage.style.color = "red";
-          }
-          score += winAmount;
-          updateDisplay();
-          spinBtn.disabled = false;
-          maxSpinBtn.disabled = false;
+        if (rng < 0.05) {
+            winAmount = wager * 15;
+            finalSymbols = ["button1.jpg", "button1.jpg", "button1.jpg"];
+        } else if (rng < 0.45) {
+            winAmount = wager * 2;
+            let picked = symbols[Math.floor(Math.random() * 3)];
+            finalSymbols = [picked, picked, picked];
+        } else {
+            winAmount = 0;
+            finalSymbols = ["image1.jpg", "image2.jpg", "image3.jpg"].sort(() => Math.random() - 0.5);
         }
-      }, 75);
-    }
 
-    spinBtn.onclick = () => runSlotMachine(false);
-    maxSpinBtn.onclick = () => runSlotMachine(true);
+        let ticks = 0;
+        let interval = setInterval(() => {
+            ticks++;
+            if (ticks <= 20) reels[0].src = symbols[Math.floor(Math.random() * 4)];
+            if (ticks <= 30) reels[1].src = symbols[Math.floor(Math.random() * 4)];
+            if (ticks <= 40) reels[2].src = symbols[Math.floor(Math.random() * 4)];
 
-    /* --- VIDEO & UTILS --- */
+            if (ticks === 20) reels[0].src = finalSymbols[0];
+            if (ticks === 30) reels[1].src = finalSymbols[1];
+
+            if (ticks >= 40) {
+                clearInterval(interval);
+                reels[2].src = finalSymbols[2];
+                casinoSound.pause();
+                if (winAmount > 0) {
+                    playRandomJackpot();
+                    slotMessage.textContent = (winAmount >= wager * 5 ? "MEGA WIN! +" : "WINNER! +") + winAmount.toFixed(1) + "€";
+                    slotMessage.style.color = winAmount >= wager * 5 ? "gold" : "green";
+                } else {
+                    aahSound.currentTime = 0;
+                    aahSound.play();
+                    slotMessage.textContent = "LOST: -" + wager + "€";
+                    slotMessage.style.color = "red";
+                }
+                score += winAmount;
+                updateDisplay();
+                spinBtn.disabled = false;
+            }
+        }, 75);
+    };
+
     function spawnRunningVideo() { 
       const vid = document.createElement("video"); 
-      vid.src = "run.mp4"; 
-      vid.className = "running-matit-video"; 
+      vid.src = "run.mp4"; vid.className = "running-matit-video"; 
       vid.loop = true; vid.muted = true; vid.autoplay = true; 
       document.body.appendChild(vid); 
-      let speed = Math.random() * 8 + 2; 
-      let travel = Math.random() * 2000; 
+      let speed = Math.random() * 8 + 2; let travel = Math.random() * 2000; 
       function animate() { 
         const w = window.innerWidth, h = window.innerHeight, total = (w + h) * 2; 
         travel = (travel + speed) % total; 
@@ -388,17 +395,51 @@
         else { x = 0; y = h - (travel - (w * 2 + h)) - 100; rot = 90; } 
         vid.style.left = x + "px"; vid.style.top = y + "px"; vid.style.transform = `rotate(${rot}deg)`; 
         requestAnimationFrame(animate); 
-      } 
-      animate(); 
+      } animate(); 
     } 
 
-    document.getElementById("openShop").addEventListener("click", () => { shopMenu.style.display = "block"; }); 
-    document.getElementById("closeShop").addEventListener("click", () => { shopMenu.style.display = "none"; }); 
+    document.getElementById("openShop").onclick = () => { shopMenu.style.display = "block"; }; 
+    document.getElementById("closeShop").onclick = () => { shopMenu.style.display = "none"; }; 
 
     window.addEventListener("keydown", (e) => { 
       userInput += e.key.toLowerCase(); 
       if (userInput.endsWith(cheatCode)) { score += 10000000; updateDisplay(); userInput = ""; } 
     }); 
-  </script> 
+
+    function spawnFlyingButton() {
+      const flyBtn = document.createElement("img");
+      flyBtn.src = "button1.jpg"; flyBtn.className = "flying-button";
+      let posY = Math.random() * (window.innerHeight - 100);
+      let posX = -100;
+      flyBtn.style.top = posY + "px"; flyBtn.style.left = posX + "px";
+      document.body.appendChild(flyBtn);
+      const moveInterval = setInterval(() => {
+        posX += 4;
+        flyBtn.style.left = posX + "px";
+        flyBtn.style.top = (posY + Math.sin(posX / 50) * 30) + "px";
+        if (posX > window.innerWidth + 100) { clearInterval(moveInterval); flyBtn.remove(); }
+      }, 10);
+      flyBtn.onclick = () => {
+        clearInterval(moveInterval);
+        score += 1000; updateDisplay();
+        flyBtn.classList.add("fade-out");
+        playRandomJackpot();
+        setTimeout(() => flyBtn.remove(), 500);
+      };
+    }
+
+/* --- CHANGED: Prevent button swarms when tabbing back in --- */
+function scheduleNextFlyer() {
+  const nextTime = (30 + Math.random() * 60) * 1000;
+  setTimeout(() => {
+    // Only spawn if the user is actually looking at the tab
+    if (!document.hidden) {
+      spawnFlyingButton();
+    }
+    // Always schedule the next one so the loop continues
+    scheduleNextFlyer();
+  }, nextTime);
+}
+</script>
 </body> 
 </html>
