@@ -134,28 +134,35 @@
       to { transform: translate(calc(-50% + var(--x)), -150px); opacity: 0; } 
     } 
 
-    /* --- CHANGED: Flying Golden Button Styles --- */
-.flying-button {
-  position: fixed;
-  width: 80px;
-  height: 80px;
-  cursor: pointer;
-  z-index: 200;
-  transition: opacity 0.5s ease-out, transform 0.1s;
-  animation: spin 3s linear infinite;
-  border-radius: 50%;
-}
+    .flying-button {
+      position: fixed;
+      width: 80px;
+      height: 80px;
+      cursor: pointer;
+      z-index: 200;
+      transition: opacity 0.5s ease-out, transform 0.1s;
+      animation: spin 3s linear infinite;
+      border-radius: 50%;
+    }
 
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
 
-.fade-out {
-  opacity: 0;
-  pointer-events: none;
-  transform: scale(2) rotate(720deg) !important;
-}
+    .fade-out {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(2) rotate(720deg) !important;
+    }
+
+    .casino-banner {
+      width: 100%;
+      height: 200px;
+      background: url('casino1.jpg') no-repeat center center;
+      background-size: cover;
+      margin-top: 20px;
+    }
   </style> 
 </head> 
 
@@ -182,38 +189,58 @@
     <div class="shop-nav">
       <button class="nav-btn" onclick="showTab('shopTab')">Shop</button>
       <button id="musicNavBtn" class="nav-btn" style="display: none;" onclick="showTab('musicTab')">Music</button>
+      <button id="cosmeticsNavBtn" class="nav-btn" style="display: none;" onclick="showTab('cosmeticsTab')">Cosmetics</button>
       <button id="casinoNavBtn" class="nav-btn" style="display: none;" onclick="showTab('casinoTab')">Casino</button>
     </div>
 
     <div id="shopTab" class="tab-content active-tab">
       <h2 style="text-align: center; margin-top: 0;">Upgrades</h2> 
-      <hr> 
-      <div class="upgrade-item"> 
-        <div class="upgrade-info"><b>Autoclicker</b><span>+0.1€ per sec</span></div> 
+      <hr>
+      <div class="upgrade-item">
+        <div class="upgrade-info"><b>Autoclicker</b><span>+0.1€/s</span></div>
         <div class="upgrade-right">
-          <img src="autoclicker.png" class="upgrade-img">
-          <button id="buyAutoclicker" class="buy-btn">30€</button>
-        </div> 
+          <img src="autoclicker.png" class="upgrade-img"> <button id="buyAutoclicker" class="buy-btn">30€</button></div>
       </div>
-      <div class="upgrade-item"> 
-        <div class="upgrade-info"><b>Running Matīt</b><span>2X Multiplier (Max 6)</span></div> 
-        <div class="upgrade-right">
-          <video src="run.mp4" class="upgrade-img" muted loop autoplay></video> 
-          <button id="buyRunning" class="buy-btn">300€</button>
-        </div> 
-      </div>
+      <div class="upgrade-item">
+        <div class="upgrade-info"><b>Running Matīt</b><span>+1.0€/s + 2X Mult on first purchase</span></div>
+<div class="upgrade-right">
+    <video src="run.mp4" class="upgrade-img" autoplay loop muted playsinline></video> 
+    <button id="buyRunning" class="buy-btn">300€</button>
+  </div>
+</div>
+      
       <div class="upgrade-item">
         <div class="upgrade-info"><b>Unlock Music</b><span>Gain access to Music Tab</span></div>
         <div class="upgrade-right">
-          <div class="upgrade-img" style="display:flex;align-items:center;justify-content:center;font-size:24px;">🎵</div>
-          <button id="buyMusic" class="buy-btn">1000€</button>
+          <img src="music.png" class="upgrade-img"> <button id="buyMusic" class="buy-btn">1000€</button>
         </div>
       </div>
+
+      <div class="upgrade-item">
+        <div class="upgrade-info"><b>Unlock Cosmetics</b><span>New Looks + 1.5X Mult</span></div>
+        <div class="upgrade-right">
+          <img src="cosmetics.jpg" class="upgrade-img"> <button id="buyCosmetics" class="buy-btn">2500€</button>
+        </div>
+      </div>
+
       <div class="upgrade-item">
         <div class="upgrade-info"><b>Unlock Casino</b><span>Gain access to Casino + 1.5X Mult</span></div>
         <div class="upgrade-right">
-          <div class="upgrade-img" style="display:flex;align-items:center;justify-content:center;font-size:24px;">🎲</div>
-          <button id="buyCasino" class="buy-btn">5000€</button>
+          <img src="casino.jpg" class="upgrade-img"> <button id="buyCasino" class="buy-btn">5000€</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="cosmeticsTab" class="tab-content">
+      <h2 style="text-align: center;">Wardrobe</h2>
+      <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; padding: 20px;">
+        <div style="text-align: center;">
+          <img src="button1.jpg" style="width: 80px; height: 80px; border: 2px solid #444; border-radius: 10px; cursor: pointer;" onclick="setSkin('button1.jpg')">
+          <p>Original</p>
+        </div>
+        <div style="text-align: center;">
+          <img src="golden_matit.png" style="width: 80px; height: 80px; border: 2px solid #444; border-radius: 10px; cursor: pointer;" onclick="setSkin('golden_matit.png')">
+          <p>Golden</p>
         </div>
       </div>
     </div>
@@ -223,41 +250,48 @@
       <p style="text-align: center; color: #555;">Music tracks will appear here soon...</p>
     </div>
 
- <div id="casinoTab" class="tab-content">
-  <h2 style="text-align: center;">Book of Matīt</h2>
-  <div style="text-align: center; margin-bottom: 10px;">
-    <p>Enter your wager:</p>
-    <input type="number" id="betAmount" value="250" min="1" style="padding: 10px; border-radius: 5px; border: 1px solid #444; width: 100px; text-align: center;">
-  </div>
-  
-  <div style="display: flex; justify-content: center; gap: 15px; margin: 20px 0;">
-    <img id="reel1" src="image1.jpg" style="width: 80px; height: 80px; border: 3px solid #444; border-radius: 10px;">
-    <img id="reel2" src="image2.jpg" style="width: 80px; height: 80px; border: 3px solid #444; border-radius: 10px;">
-    <img id="reel3" src="image3.jpg" style="width: 80px; height: 80px; border: 3px solid #444; border-radius: 10px;">
-  </div>
-
-  <div style="text-align: center;">
-    <button id="spinBtn" class="buy-btn" style="background-color: #e67e22; box-shadow: 0 5px 0 #a05817; width: 200px;">SPIN!</button>
-    <button id="allInBtn" class="buy-btn" style="background-color: #7d5fff; box-shadow: 0 5px 0 #5740b3; width: 100px;">ALL IN</button>
-    <p id="slotMessage" style="font-weight: bold; margin-top: 15px; min-height: 1.2em;"></p>
-  </div>
-</div>
+<div id="casinoTab" class="tab-content">
+      <h2 style="text-align: center;">Book of Matīt</h2>
+      <div style="text-align: center; margin-bottom: 10px;">
+        <p>Enter your wager:</p>
+        <input type="number" id="betAmount" value="250" min="1" style="padding: 10px; border-radius: 5px; border: 1px solid #444; width: 100px; text-align: center;">
+      </div>
+      <div style="display: flex; justify-content: center; gap: 15px; margin: 20px 0;">
+        <img id="reel1" src="image1.jpg" style="width: 80px; height: 80px; border: 3px solid #444; border-radius: 10px;">
+        <img id="reel2" src="image2.jpg" style="width: 80px; height: 80px; border: 3px solid #444; border-radius: 10px;">
+        <img id="reel3" src="image3.jpg" style="width: 80px; height: 80px; border: 3px solid #444; border-radius: 10px;">
+      </div>
+      <div style="text-align: center;">
+        <button id="spinBtn" class="buy-btn" style="background-color: #e67e22; box-shadow: 0 5px 0 #a05817; width: 200px;">SPIN!</button>
+        <button id="allInBtn" class="buy-btn" style="background-color: #7d5fff; box-shadow: 0 5px 0 #5740b3; width: 100px;">ALL IN</button>
+        <p id="slotMessage" style="font-weight: bold; margin-top: 15px; min-height: 1.2em;"></p>
+      </div>
+      <div class="casino-banner"></div>
+    </div>
 
 <script> 
+    /* --- INITIAL STATE --- */
     let score = 0; 
     let autoClickers = 0; 
     let multiplier = 1; 
     let runningMatitsOwned = 0; 
     let musicUnlocked = false;
     let casinoUnlocked = false;
+    let cosmeticsUnlocked = false;
+    let currentSkin = "button1.jpg"; 
     const cheatCode = "ztmy"; 
     let userInput = ""; 
+    let autoclickerPrice = 30; 
+    let runningMatitPrice = 300;
 
+
+    /* --- DOM ELEMENTS --- */
     const scoreDisplay = document.getElementById("score"); 
     const incomeDisplay = document.getElementById("income"); 
     const buyAutoclickerBtn = document.getElementById("buyAutoclicker");
     const buyRunningBtn = document.getElementById("buyRunning"); 
     const buyMusicBtn = document.getElementById("buyMusic");
+    const buyCosmeticsBtn = document.getElementById("buyCosmetics");
     const buyCasinoBtn = document.getElementById("buyCasino");
     const shopMenu = document.getElementById("shopMenu");
     const spinBtn = document.getElementById("spinBtn");
@@ -265,10 +299,12 @@
     const betInput = document.getElementById("betAmount");
     const slotMessage = document.getElementById("slotMessage");
     const reels = [document.getElementById("reel1"), document.getElementById("reel2"), document.getElementById("reel3")];
+    const mainButton = document.getElementById("addPoint");
     const casinoSound = document.getElementById("casinoSound");
     const aahSound = document.getElementById("aahSound");
     const symbols = ["image1.jpg", "image2.jpg", "image3.jpg", "button1.jpg"];
 
+    /* --- UI HELPERS --- */
     function showTab(tabId) {
       const contents = document.getElementsByClassName('tab-content');
       for (let content of contents) content.classList.remove('active-tab');
@@ -276,32 +312,47 @@
     }
 
     function playRandomJackpot() {
-        const randomNum = Math.floor(Math.random() * 4) + 1;
-        const sound = new Audio(`jackpot${randomNum}.mp3`);
+        const sound = new Audio(`jackpot${Math.floor(Math.random() * 4) + 1}.mp3`);
         sound.play();
     }
 
-    allInBtn.onclick = () => { betInput.value = Math.floor(score); };
-
-    function updateDisplay() {
-      scoreDisplay.textContent = score.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1}); 
-      let currentIncome = ((autoClickers * 0.1) + (runningMatitsOwned * 1)) * multiplier; 
-      incomeDisplay.textContent = currentIncome.toFixed(1); 
-      buyAutoclickerBtn.disabled = score < 30;
-      buyRunningBtn.disabled = score < 300 || runningMatitsOwned >= 6;
-      if (runningMatitsOwned >= 6) buyRunningBtn.textContent = "SOLD OUT";
-      document.getElementById("musicNavBtn").style.display = musicUnlocked ? "inline-block" : "none";
-      buyMusicBtn.disabled = score < 1000 || musicUnlocked;
-      document.getElementById("casinoNavBtn").style.display = casinoUnlocked ? "inline-block" : "none";
-      buyCasinoBtn.disabled = score < 5000 || casinoUnlocked;
+    function setSkin(skinPath) {
+        currentSkin = skinPath;
+        mainButton.src = skinPath;
     }
 
-    document.getElementById("addPoint").addEventListener("mousedown", (e) => { 
+function updateDisplay() {
+  scoreDisplay.textContent = score.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1}); 
+  let currentIncome = ((autoClickers * 0.1) + (runningMatitsOwned * 1)) * multiplier; 
+  incomeDisplay.textContent = currentIncome.toFixed(1); 
+  
+  // Updates button text to show the new scaling prices
+  buyAutoclickerBtn.disabled = score < autoclickerPrice;
+  buyAutoclickerBtn.textContent = Math.ceil(autoclickerPrice) + "€";
+  
+  buyRunningBtn.disabled = score < runningMatitPrice;
+  buyRunningBtn.textContent = Math.ceil(runningMatitPrice) + "€";
+      
+      document.getElementById("musicNavBtn").style.display = musicUnlocked ? "inline-block" : "none";
+      buyMusicBtn.disabled = score < 1000 || musicUnlocked;
+      if (musicUnlocked) buyMusicBtn.textContent = "UNLOCKED";
+
+      document.getElementById("cosmeticsNavBtn").style.display = cosmeticsUnlocked ? "inline-block" : "none";
+      buyCosmeticsBtn.disabled = score < 2500 || cosmeticsUnlocked;
+      if (cosmeticsUnlocked) buyCosmeticsBtn.textContent = "UNLOCKED";
+
+      document.getElementById("casinoNavBtn").style.display = casinoUnlocked ? "inline-block" : "none";
+      buyCasinoBtn.disabled = score < 5000 || casinoUnlocked;
+      if (casinoUnlocked) buyCasinoBtn.textContent = "UNLOCKED";
+    }
+
+    /* --- GAMEPLAY ACTIONS --- */
+    mainButton.addEventListener("mousedown", (e) => { 
       score += (1 * multiplier); 
       updateDisplay(); 
       const popup = document.createElement("div"); 
       popup.className = "plus-one"; 
-      popup.innerHTML = `+${(1 * multiplier).toFixed(0)} <img src="button1.jpg">`; 
+      popup.innerHTML = `+${(1 * multiplier).toFixed(0)} <img src="${currentSkin}">`; 
       popup.style.setProperty("--x", (Math.random() * 80 - 40) + "px"); 
       popup.style.left = e.clientX + "px"; 
       popup.style.top = e.clientY + "px"; 
@@ -309,76 +360,78 @@
       setTimeout(() => popup.remove(), 800); 
     }); 
 
-    buyAutoclickerBtn.onclick = () => { if (score >= 30) { score -= 30; autoClickers++; updateDisplay(); } };
-    buyRunningBtn.onclick = () => { if (score >= 300 && runningMatitsOwned < 6) { score -= 300; if (runningMatitsOwned === 0) multiplier = 2; runningMatitsOwned++; spawnRunningVideo(); updateDisplay(); } };
+    allInBtn.onclick = () => { betInput.value = Math.floor(score); };
+
+    /* --- PURCHASES --- */
+    buyAutoclickerBtn.onclick = () => { 
+  if (score >= autoclickerPrice) { 
+    score -= autoclickerPrice; 
+    autoClickers++; 
+    autoclickerPrice *= 1.75; 
+    updateDisplay(); 
+  } 
+};
+    buyRunningBtn.onclick = () => { 
+  if (score >= runningMatitPrice) { 
+    score -= runningMatitPrice; 
+    if (runningMatitsOwned === 0) multiplier = 2; 
+    runningMatitsOwned++; 
+    runningMatitPrice *= 1.75; 
+    spawnRunningVideo(); 
+    updateDisplay(); 
+  } 
+};
     buyMusicBtn.onclick = () => { if (score >= 1000 && !musicUnlocked) { score -= 1000; musicUnlocked = true; updateDisplay(); } };
+    buyCosmeticsBtn.onclick = () => { if (score >= 2500 && !cosmeticsUnlocked) { score -= 2500; cosmeticsUnlocked = true; multiplier *= 1.5; updateDisplay(); } };
     buyCasinoBtn.onclick = () => { if (score >= 5000 && !casinoUnlocked) { score -= 5000; casinoUnlocked = true; multiplier *= 1.5; updateDisplay(); } };
 
+    /* --- PASSIVE INCOME --- */
     setInterval(() => { 
       let totalBaseIncome = (autoClickers * 0.1) + (runningMatitsOwned * 1.0);
       if (totalBaseIncome > 0) { score += totalBaseIncome * multiplier; updateDisplay(); } 
     }, 1000);
 
+    /* --- CASINO LOGIC --- */
     spinBtn.onclick = () => {
         const wager = parseInt(betInput.value);
-        if (isNaN(wager) || wager <= 0) { alert("Enter a valid bet!"); return; }
-        if (score < wager) { alert("You don't have enough money!"); return; }
-
+        if (isNaN(wager) || wager <= 0 || score < wager) { alert("Invalid bet!"); return; }
         score -= wager;
         updateDisplay();
         spinBtn.disabled = true;
         slotMessage.textContent = "Spinning...";
-        slotMessage.style.color = "#444";
-        casinoSound.currentTime = 0;
-        casinoSound.play();
-
+        casinoSound.currentTime = 0; casinoSound.play();
         let rng = Math.random();
-        let winAmount = 0;
-        let finalSymbols = [];
-
-        if (rng < 0.05) {
-            winAmount = wager * 15;
-            finalSymbols = ["button1.jpg", "button1.jpg", "button1.jpg"];
-        } else if (rng < 0.45) {
-            winAmount = wager * 2;
-            let picked = symbols[Math.floor(Math.random() * 3)];
-            finalSymbols = [picked, picked, picked];
-        } else {
-            winAmount = 0;
-            finalSymbols = ["image1.jpg", "image2.jpg", "image3.jpg"].sort(() => Math.random() - 0.5);
-        }
-
+        let winAmount = 0, finalSymbols = [];
+        if (rng < 0.05) { winAmount = wager * 15; finalSymbols = ["button1.jpg", "button1.jpg", "button1.jpg"]; } 
+        else if (rng < 0.45) { winAmount = wager * 2; let p = symbols[Math.floor(Math.random() * 3)]; finalSymbols = [p, p, p]; } 
+        else { winAmount = 0; finalSymbols = ["image1.jpg", "image2.jpg", "image3.jpg"].sort(() => Math.random() - 0.5); }
         let ticks = 0;
         let interval = setInterval(() => {
             ticks++;
             if (ticks <= 20) reels[0].src = symbols[Math.floor(Math.random() * 4)];
             if (ticks <= 30) reels[1].src = symbols[Math.floor(Math.random() * 4)];
             if (ticks <= 40) reels[2].src = symbols[Math.floor(Math.random() * 4)];
-
             if (ticks === 20) reels[0].src = finalSymbols[0];
             if (ticks === 30) reels[1].src = finalSymbols[1];
-
             if (ticks >= 40) {
                 clearInterval(interval);
                 reels[2].src = finalSymbols[2];
                 casinoSound.pause();
                 if (winAmount > 0) {
                     playRandomJackpot();
-                    slotMessage.textContent = (winAmount >= wager * 5 ? "MEGA WIN! +" : "WINNER! +") + winAmount.toFixed(1) + "€";
-                    slotMessage.style.color = winAmount >= wager * 5 ? "gold" : "green";
+                    slotMessage.textContent = "WIN! +" + winAmount.toFixed(1) + "€";
+                    slotMessage.style.color = "green";
                 } else {
-                    aahSound.currentTime = 0;
                     aahSound.play();
                     slotMessage.textContent = "LOST: -" + wager + "€";
                     slotMessage.style.color = "red";
                 }
-                score += winAmount;
-                updateDisplay();
-                spinBtn.disabled = false;
+                score += winAmount; updateDisplay(); spinBtn.disabled = false;
             }
         }, 75);
     };
 
+    /* --- SPECIAL EVENTS --- */
     function spawnRunningVideo() { 
       const vid = document.createElement("video"); 
       vid.src = "run.mp4"; vid.className = "running-matit-video"; 
@@ -397,14 +450,6 @@
         requestAnimationFrame(animate); 
       } animate(); 
     } 
-
-    document.getElementById("openShop").onclick = () => { shopMenu.style.display = "block"; }; 
-    document.getElementById("closeShop").onclick = () => { shopMenu.style.display = "none"; }; 
-
-    window.addEventListener("keydown", (e) => { 
-      userInput += e.key.toLowerCase(); 
-      if (userInput.endsWith(cheatCode)) { score += 10000000; updateDisplay(); userInput = ""; } 
-    }); 
 
     function spawnFlyingButton() {
       const flyBtn = document.createElement("img");
@@ -428,18 +473,25 @@
       };
     }
 
-/* --- CHANGED: Prevent button swarms when tabbing back in --- */
-function scheduleNextFlyer() {
-  const nextTime = (30 + Math.random() * 60) * 1000;
-  setTimeout(() => {
-    // Only spawn if the user is actually looking at the tab
-    if (!document.hidden) {
-      spawnFlyingButton();
+    function scheduleNextFlyer() {
+      setTimeout(() => { 
+        if (!document.hidden) spawnFlyingButton(); 
+        scheduleNextFlyer(); 
+      }, (30 + Math.random() * 60) * 1000);
     }
-    // Always schedule the next one so the loop continues
-    scheduleNextFlyer();
-  }, nextTime);
-}
+
+    /* --- INIT --- */
+    document.getElementById("openShop").onclick = () => { shopMenu.style.display = "block"; }; 
+    document.getElementById("closeShop").onclick = () => { shopMenu.style.display = "none"; }; 
+    
+    window.addEventListener("keydown", (e) => { 
+      userInput += e.key.toLowerCase(); 
+      if (userInput.endsWith(cheatCode)) { score += 10000000; updateDisplay(); userInput = ""; } 
+    }); 
+
+    mainButton.src = currentSkin; 
+    scheduleNextFlyer(); 
+    updateDisplay();
 </script>
 </body> 
 </html>
