@@ -245,10 +245,15 @@
       </div>
     </div>
 
-    <div id="musicTab" class="tab-content">
-      <h2 style="text-align: center;">Music Player</h2>
-      <p style="text-align: center; color: #555;">Music tracks will appear here soon...</p>
-    </div>
+<div id="musicTab" class="tab-content">
+  <h2 style="text-align: center;">Music Player</h2>
+  <div style="text-align:center; margin-bottom:20px; background: rgba(255, 255, 255, 0.2); padding: 15px; border-radius: 15px;">
+    <button id="musicPlayPause" class="buy-btn" style="background-color: #3498db; box-shadow: 0 5px 0 #2980b9;">▶ Play</button>
+  </div>
+  <h3 style="margin-left: 10px;">Music Shop</h3>
+  <hr>
+  <div id="musicShopList" style="padding: 10px;"></div>
+</div>
 
 <div id="casinoTab" class="tab-content">
       <h2 style="text-align: center;">Book of Matīt</h2>
@@ -479,6 +484,64 @@ function updateDisplay() {
         scheduleNextFlyer(); 
       }, (30 + Math.random() * 60) * 1000);
     }
+
+    /* --- CHANGED: Music State & Track Data --- */
+let currentAudio = null;
+let isPlaying = false;
+let tracks = [
+  { id: 0, name: "Matīt Theme", file: "music1.mp3", price: 0, owned: true },
+  { id: 1, name: "Golden Vibes", file: "music2.mp3", price: 1500, owned: false },
+  { id: 2, name: "Casino Night", file: "music3.mp3", price: 5000, owned: false }
+];
+
+/* --- CHANGED: Music Shop & Player Functions --- */
+function initMusicShop() {
+  const container = document.getElementById("musicShopList");
+  if (!container) return;
+  container.innerHTML = "";
+  tracks.forEach(t => {
+    const div = document.createElement("div");
+    div.className = "upgrade-item";
+    div.innerHTML = `
+      <div class="upgrade-info"><b>${t.name}</b><span>${t.owned ? "Owned" : t.price + "€"}</span></div>
+      <div class="upgrade-right">
+        <button class="buy-btn" onclick="handleTrackAction(${t.id})" ${!t.owned && score < t.price ? "disabled" : ""}>
+          ${t.owned ? "Play" : "Buy"}
+        </button>
+      </div>`;
+    container.appendChild(div);
+  });
+}
+
+function handleTrackAction(id) {
+  const track = tracks[id];
+  if (!track.owned && score >= track.price) {
+    score -= track.price;
+    track.owned = true;
+    updateDisplay();
+    initMusicShop();
+  } else if (track.owned) {
+    if (currentAudio) currentAudio.pause();
+    currentAudio = new Audio(track.file);
+    currentAudio.loop = true;
+    currentAudio.play();
+    isPlaying = true;
+    document.getElementById("nowPlaying").textContent = "Now Playing: " + track.name;
+    document.getElementById("musicPlayPause").textContent = "⏸ Pause";
+  }
+}
+
+document.getElementById("musicPlayPause").onclick = () => {
+  if (!currentAudio) return;
+  if (isPlaying) { 
+    currentAudio.pause(); 
+    document.getElementById("musicPlayPause").textContent = "▶ Play"; 
+  } else { 
+    currentAudio.play(); 
+    document.getElementById("musicPlayPause").textContent = "⏸ Pause"; 
+  }
+  isPlaying = !isPlaying;
+};
 
     /* --- INIT --- */
     document.getElementById("openShop").onclick = () => { shopMenu.style.display = "block"; }; 
