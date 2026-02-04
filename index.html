@@ -126,7 +126,37 @@
     .buy-btn:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 1px 0 #2e6631; } 
     .buy-btn:disabled { background-color: #888; box-shadow: none; cursor: not-allowed; transform: none; } 
 
-    .running-matit-video { position: fixed; width: 120px; pointer-events: none; z-index: 1; } 
+/* --- CHANGED: Added GPU hint to running matit style --- */
+/* --- CHANGED: CSS-only movement (No JS required for animation) --- */
+.running-matit-video { 
+  position: fixed; 
+  width: 120px; 
+  pointer-events: none; 
+  z-index: 1; 
+  top: 0; 
+  left: 0;
+  animation: runAround 10s linear infinite;
+  will-change: translate, rotate;
+} 
+
+@keyframes runAround {
+  /* Top-Left to Top-Right */
+  0%   { translate: 0vw 0vh; rotate: 180deg; }
+  24.9% { rotate: 180deg; }
+  25%  { translate: calc(100vw - 120px) 0vh; rotate: 270deg; }
+  
+  /* Top-Right to Bottom-Right */
+  49.9% { rotate: 270deg; }
+  50%  { translate: calc(100vw - 120px) calc(100vh - 120px); rotate: 0deg; }
+  
+  /* Bottom-Right to Bottom-Left */
+  74.9% { rotate: 0deg; }
+  75%  { translate: 0vw calc(100vh - 120px); rotate: 90deg; }
+  
+  /* Bottom-Left back to Start */
+  99.9% { rotate: 90deg; }
+  100% { translate: 0vw 0vh; rotate: 180deg; }
+}
     .plus-one img { height: 30px; width: auto; vertical-align: middle; margin-left: 5px; } 
     .plus-one { position: absolute; font-size: 26px; font-weight: bold; pointer-events: none; animation: floatUp 0.8s ease-out forwards; z-index: 20; } 
     @keyframes floatUp { 
@@ -248,7 +278,14 @@
 <div id="musicTab" class="tab-content">
   <h2 style="text-align: center;">Music Player</h2>
   <div style="text-align:center; margin-bottom:20px; background: rgba(255, 255, 255, 0.2); padding: 15px; border-radius: 15px;">
-    <button id="musicPlayPause" class="buy-btn" style="background-color: #3498db; box-shadow: 0 5px 0 #2980b9;">▶ Play</button>
+    <p id="nowPlaying" style="font-weight: bold; margin-bottom: 10px;">No track playing</p>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+      <button id="musicPlayPause" class="buy-btn" style="background-color: #3498db; box-shadow: 0 5px 0 #2980b9; width: 140px;">▶ Play</button>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 0.9rem;">Volume:</span>
+        <input type="range" id="musicVolume" min="0" max="1" step="0.01" value="0.5" style="cursor: pointer;">
+      </div>
+    </div>
   </div>
   <h3 style="margin-left: 10px;">Music Shop</h3>
   <hr>
@@ -309,12 +346,17 @@
     const aahSound = document.getElementById("aahSound");
     const symbols = ["image1.jpg", "image2.jpg", "image3.jpg", "button1.jpg"];
 
-    /* --- UI HELPERS --- */
-    function showTab(tabId) {
-      const contents = document.getElementsByClassName('tab-content');
-      for (let content of contents) content.classList.remove('active-tab');
-      document.getElementById(tabId).classList.add('active-tab');
-    }
+/* --- CHANGED: showTab now refreshes the music shop immediately when clicked --- */
+function showTab(tabId) {
+  const contents = document.getElementsByClassName('tab-content');
+  for (let content of contents) content.classList.remove('active-tab');
+  document.getElementById(tabId).classList.add('active-tab');
+  
+  // Refresh the music shop immediately when entering the tab
+  if (tabId === 'musicTab' && musicUnlocked) {
+    initMusicShop();
+  }
+}
 
     function playRandomJackpot() {
         const sound = new Audio(`jackpot${Math.floor(Math.random() * 4) + 1}.mp3`);
@@ -326,30 +368,37 @@
         mainButton.src = skinPath;
     }
 
+/* --- CHANGED: Optimized updateDisplay to only refresh music shop when tab is active --- */
 function updateDisplay() {
   scoreDisplay.textContent = score.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1}); 
   let currentIncome = ((autoClickers * 0.1) + (runningMatitsOwned * 1)) * multiplier; 
   incomeDisplay.textContent = currentIncome.toFixed(1); 
   
-  // Updates button text to show the new scaling prices
   buyAutoclickerBtn.disabled = score < autoclickerPrice;
   buyAutoclickerBtn.textContent = Math.ceil(autoclickerPrice) + "€";
   
   buyRunningBtn.disabled = score < runningMatitPrice;
   buyRunningBtn.textContent = Math.ceil(runningMatitPrice) + "€";
-      
-      document.getElementById("musicNavBtn").style.display = musicUnlocked ? "inline-block" : "none";
-      buyMusicBtn.disabled = score < 1000 || musicUnlocked;
-      if (musicUnlocked) buyMusicBtn.textContent = "UNLOCKED";
-
-      document.getElementById("cosmeticsNavBtn").style.display = cosmeticsUnlocked ? "inline-block" : "none";
-      buyCosmeticsBtn.disabled = score < 2500 || cosmeticsUnlocked;
-      if (cosmeticsUnlocked) buyCosmeticsBtn.textContent = "UNLOCKED";
-
-      document.getElementById("casinoNavBtn").style.display = casinoUnlocked ? "inline-block" : "none";
-      buyCasinoBtn.disabled = score < 5000 || casinoUnlocked;
-      if (casinoUnlocked) buyCasinoBtn.textContent = "UNLOCKED";
+  
+  document.getElementById("musicNavBtn").style.display = musicUnlocked ? "inline-block" : "none";
+  buyMusicBtn.disabled = score < 1000 || musicUnlocked;
+  
+  if (musicUnlocked) {
+    buyMusicBtn.textContent = "UNLOCKED";
+    // ONLY refresh the shop if the music tab is actually open to prevent clicking lag
+    if (document.getElementById("musicTab").classList.contains("active-tab")) {
+      initMusicShop(); 
     }
+  }
+
+  document.getElementById("cosmeticsNavBtn").style.display = cosmeticsUnlocked ? "inline-block" : "none";
+  buyCosmeticsBtn.disabled = score < 2500 || cosmeticsUnlocked;
+  if (cosmeticsUnlocked) buyCosmeticsBtn.textContent = "UNLOCKED";
+
+  document.getElementById("casinoNavBtn").style.display = casinoUnlocked ? "inline-block" : "none";
+  buyCasinoBtn.disabled = score < 5000 || casinoUnlocked;
+  if (casinoUnlocked) buyCasinoBtn.textContent = "UNLOCKED";
+}
 
     /* --- GAMEPLAY ACTIONS --- */
     mainButton.addEventListener("mousedown", (e) => { 
@@ -372,7 +421,7 @@ function updateDisplay() {
   if (score >= autoclickerPrice) { 
     score -= autoclickerPrice; 
     autoClickers++; 
-    autoclickerPrice *= 1.75; 
+    autoclickerPrice *= 1.1; 
     updateDisplay(); 
   } 
 };
@@ -381,7 +430,7 @@ function updateDisplay() {
     score -= runningMatitPrice; 
     if (runningMatitsOwned === 0) multiplier = 2; 
     runningMatitsOwned++; 
-    runningMatitPrice *= 1.75; 
+    runningMatitPrice *= 1.2; 
     spawnRunningVideo(); 
     updateDisplay(); 
   } 
@@ -437,24 +486,24 @@ function updateDisplay() {
     };
 
     /* --- SPECIAL EVENTS --- */
-    function spawnRunningVideo() { 
-      const vid = document.createElement("video"); 
-      vid.src = "run.mp4"; vid.className = "running-matit-video"; 
-      vid.loop = true; vid.muted = true; vid.autoplay = true; 
-      document.body.appendChild(vid); 
-      let speed = Math.random() * 8 + 2; let travel = Math.random() * 2000; 
-      function animate() { 
-        const w = window.innerWidth, h = window.innerHeight, total = (w + h) * 2; 
-        travel = (travel + speed) % total; 
-        let x, y, rot; 
-        if (travel < w) { x = travel; y = 0; rot = 180; } 
-        else if (travel < w + h) { x = w - 100; y = travel - w; rot = 270; } 
-        else if (travel < w * 2 + h) { x = w - (travel - (w + h)) - 100; y = h - 100; rot = 0; } 
-        else { x = 0; y = h - (travel - (w * 2 + h)) - 100; rot = 90; } 
-        vid.style.left = x + "px"; vid.style.top = y + "px"; vid.style.transform = `rotate(${rot}deg)`; 
-        requestAnimationFrame(animate); 
-      } animate(); 
-    } 
+function spawnRunningVideo() { 
+  const vid = document.createElement("video"); 
+  vid.src = "run.mp4"; 
+  vid.className = "running-matit-video"; 
+  vid.loop = true; 
+  vid.muted = true; 
+  vid.autoplay = true; 
+  
+  // Randomize the start time of the animation so they aren't all in a perfect stack
+  const randomDelay = Math.random() * -10; 
+  vid.style.animationDelay = randomDelay + "s";
+  
+  // Randomize speed slightly (between 7s and 13s per lap)
+  const randomSpeed = 7 + Math.random() * 6;
+  vid.style.animationDuration = randomSpeed + "s";
+
+  document.body.appendChild(vid); 
+}
 
     function spawnFlyingButton() {
       const flyBtn = document.createElement("img");
@@ -488,13 +537,14 @@ function updateDisplay() {
     /* --- CHANGED: Music State & Track Data --- */
 let currentAudio = null;
 let isPlaying = false;
+/* --- CHANGED: Updated track data with icons and placeholder prices --- */
 let tracks = [
-  { id: 0, name: "Matīt Theme", file: "music1.mp3", price: 0, owned: true },
-  { id: 1, name: "Golden Vibes", file: "music2.mp3", price: 1500, owned: false },
-  { id: 2, name: "Casino Night", file: "music3.mp3", price: 5000, owned: false }
+  { id: 0, name: "Song 1", file: "song1.mp3", img: "song1.png", price: 6767, owned: false },
+  { id: 1, name: "Song 2", file: "song2.mp3", img: "song2.png", price: 6767, owned: false },
+  { id: 2, name: "Song 3", file: "song3.mp3", img: "song3.png", price: 6767, owned: false }
 ];
 
-/* --- CHANGED: Music Shop & Player Functions --- */
+/* --- CHANGED: Music Shop now displays song icons --- */
 function initMusicShop() {
   const container = document.getElementById("musicShopList");
   if (!container) return;
@@ -503,7 +553,10 @@ function initMusicShop() {
     const div = document.createElement("div");
     div.className = "upgrade-item";
     div.innerHTML = `
-      <div class="upgrade-info"><b>${t.name}</b><span>${t.owned ? "Owned" : t.price + "€"}</span></div>
+      <div style="display: flex; align-items: center; gap: 15px;">
+        <img src="${t.img}" class="upgrade-img" onerror="this.src='music.png'">
+        <div class="upgrade-info"><b>${t.name}</b><span>${t.owned ? "Owned" : t.price + "€"}</span></div>
+      </div>
       <div class="upgrade-right">
         <button class="buy-btn" onclick="handleTrackAction(${t.id})" ${!t.owned && score < t.price ? "disabled" : ""}>
           ${t.owned ? "Play" : "Buy"}
@@ -513,23 +566,45 @@ function initMusicShop() {
   });
 }
 
+/* --- CHANGED: Merged handleTrackAction with Volume & Shop Support --- */
+const volumeSlider = document.getElementById("musicVolume");
+
+/* --- CHANGED: handleTrackAction now plays music immediately upon purchase --- */
 function handleTrackAction(id) {
   const track = tracks[id];
+  
+  // Purchase logic
   if (!track.owned && score >= track.price) {
     score -= track.price;
     track.owned = true;
     updateDisplay();
-    initMusicShop();
-  } else if (track.owned) {
-    if (currentAudio) currentAudio.pause();
-    currentAudio = new Audio(track.file);
-    currentAudio.loop = true;
-    currentAudio.play();
-    isPlaying = true;
-    document.getElementById("nowPlaying").textContent = "Now Playing: " + track.name;
-    document.getElementById("musicPlayPause").textContent = "⏸ Pause";
+    // After buying, we proceed to play it immediately
+    playTrack(track); 
+  } 
+  // Standard play logic for already owned songs
+  else if (track.owned) {
+    playTrack(track);
   }
 }
+
+/* Helper function to handle the actual audio switching */
+function playTrack(track) {
+  if (currentAudio) currentAudio.pause();
+  currentAudio = new Audio(track.file);
+  currentAudio.loop = true;
+  currentAudio.volume = document.getElementById("musicVolume").value;
+  currentAudio.play();
+  isPlaying = true;
+  document.getElementById("nowPlaying").textContent = "Now Playing: " + track.name;
+  document.getElementById("musicPlayPause").textContent = "⏸ Pause";
+}
+
+// Update volume in real-time while a song is playing
+volumeSlider.oninput = (e) => {
+  if (currentAudio) {
+    currentAudio.volume = e.target.value;
+  }
+};
 
 document.getElementById("musicPlayPause").onclick = () => {
   if (!currentAudio) return;
@@ -555,6 +630,7 @@ document.getElementById("musicPlayPause").onclick = () => {
     mainButton.src = currentSkin; 
     scheduleNextFlyer(); 
     updateDisplay();
+
 </script>
 </body> 
 </html>
