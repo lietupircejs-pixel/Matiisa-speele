@@ -285,6 +285,11 @@
         <span style="font-size: 0.9rem;">Volume:</span>
         <input type="range" id="musicVolume" min="0" max="1" step="0.01" value="0.5" style="cursor: pointer;">
       </div>
+      <div style="display: flex; align-items: center; gap: 10px; margin-top: 5px;">
+  <span style="font-size: 0.9rem;">Progress:</span>
+  <input type="range" id="musicProgress" min="0" max="100" value="0" style="cursor: pointer; width: 150px;">
+  <span id="timeDisplay" style="font-size: 0.8rem; font-family: monospace;">0:00 / 0:00</span>
+</div>
     </div>
   </div>
   <h3 style="margin-left: 10px;">Music Shop</h3>
@@ -454,11 +459,34 @@ function updateDisplay() {
         spinBtn.disabled = true;
         slotMessage.textContent = "Spinning...";
         casinoSound.currentTime = 0; casinoSound.play();
-        let rng = Math.random();
-        let winAmount = 0, finalSymbols = [];
-        if (rng < 0.05) { winAmount = wager * 15; finalSymbols = ["button1.jpg", "button1.jpg", "button1.jpg"]; } 
-        else if (rng < 0.45) { winAmount = wager * 2; let p = symbols[Math.floor(Math.random() * 3)]; finalSymbols = [p, p, p]; } 
-        else { winAmount = 0; finalSymbols = ["image1.jpg", "image2.jpg", "image3.jpg"].sort(() => Math.random() - 0.5); }
+        /* --- CHANGED: Fixed logic to ensure symbols and win/loss state always match --- */
+let rng = Math.random();
+let winAmount = 0, finalSymbols = [];
+
+if (rng < 0.05) { 
+    // 5% MEGA JACKPOT (The Button)
+    winAmount = wager * 10; 
+    finalSymbols = ["button1.jpg", "button1.jpg", "button1.jpg"]; 
+} 
+else if (rng < 0.25) { 
+    // 20% REGULAR WIN (Any other triple)
+    winAmount = wager * 2; 
+    // Pick any symbol EXCEPT the button1.jpg to ensure it's a regular win
+    let p = symbols[Math.floor(Math.random() * 3)]; 
+    finalSymbols = [p, p, p]; 
+} 
+else { 
+    // 75% LOSS
+    winAmount = 0; 
+    // Keep generating random sets until we get one that ISN'T a triple match
+    do {
+        finalSymbols = [
+            symbols[Math.floor(Math.random() * 4)],
+            symbols[Math.floor(Math.random() * 4)],
+            symbols[Math.floor(Math.random() * 4)]
+        ];
+    } while (finalSymbols[0] === finalSymbols[1] && finalSymbols[1] === finalSymbols[2]);
+}
         let ticks = 0;
         let interval = setInterval(() => {
             ticks++;
@@ -539,9 +567,12 @@ let currentAudio = null;
 let isPlaying = false;
 /* --- CHANGED: Updated track data with icons and placeholder prices --- */
 let tracks = [
-  { id: 0, name: "Song 1", file: "song1.mp3", img: "song1.png", price: 6767, owned: false },
-  { id: 1, name: "Song 2", file: "song2.mp3", img: "song2.png", price: 6767, owned: false },
-  { id: 2, name: "Song 3", file: "song3.mp3", img: "song3.png", price: 6767, owned: false }
+  { id: 0, name: "What if this isn't a slave? - ツユ", file: "song1.mp3", img: "song1.jpg", price: 6767, owned: false },
+  { id: 1, name: "Mirror Temple - 2Mello", file: "song2.mp3", img: "song2.jpg", price: 6767, owned: false },
+  { id: 2, name: "Overdose - natori", file: "song3.mp3", img: "song3.jpg", price: 6767, owned: false }, 
+  { id: 3, name: "Домик в майнкрафте - Илюша", file: "song4.mp3", img: "song4.jpg", price: 6767, owned: false },
+  { id: 4, name: "Haze Haseru Haterumade - ZUTOMAYO", file: "song5.mp3", img: "song5.jpg", price: 8000, owned: false },
+  { id: 5, name: "Stronger - Kanye West", file: "song6.mp3", img: "song6.jpg", price: 10000, owned: false }
 ];
 
 /* --- CHANGED: Music Shop now displays song icons --- */
@@ -566,8 +597,10 @@ function initMusicShop() {
   });
 }
 
-/* --- CHANGED: Merged handleTrackAction with Volume & Shop Support --- */
 const volumeSlider = document.getElementById("musicVolume");
+const progressSlider = document.getElementById("musicProgress");
+const timeDisplay = document.getElementById("timeDisplay");
+let updateInterval; // To clear/set the seeker timer
 
 /* --- CHANGED: handleTrackAction now plays music immediately upon purchase --- */
 function handleTrackAction(id) {
@@ -587,17 +620,53 @@ function handleTrackAction(id) {
   }
 }
 
-/* Helper function to handle the actual audio switching */
+/* --- CHANGED: Improved playTrack logic to ensure slider max updates correctly --- */
 function playTrack(track) {
-  if (currentAudio) currentAudio.pause();
+  if (currentAudio) {
+    currentAudio.pause();
+    clearInterval(updateInterval); 
+  }
   currentAudio = new Audio(track.file);
   currentAudio.loop = true;
-  currentAudio.volume = document.getElementById("musicVolume").value;
-  currentAudio.play();
+  currentAudio.volume = volumeSlider.value; // Use the variable reference
+  
+  // Set max immediately if already known, or wait for load
+  currentAudio.onloadedmetadata = () => {
+    progressSlider.max = Math.floor(currentAudio.duration);
+  };
+
+  currentAudio.play().catch(e => console.log("Playback blocked until user interacts with page."));
   isPlaying = true;
+  
+  updateInterval = setInterval(updateProgressBar, 500);
+  
   document.getElementById("nowPlaying").textContent = "Now Playing: " + track.name;
   document.getElementById("musicPlayPause").textContent = "⏸ Pause";
 }
+
+function updateProgressBar() {
+  if (!currentAudio) return;
+  progressSlider.value = currentAudio.currentTime;
+  
+  // Format time (e.g., 1:30 / 3:45)
+  const cur = formatTime(currentAudio.currentTime);
+  const dur = formatTime(currentAudio.duration);
+  timeDisplay.textContent = `${cur} / ${dur}`;
+}
+
+function formatTime(seconds) {
+  if (isNaN(seconds)) return "0:00";
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+// Listener to seek through the song
+progressSlider.oninput = (e) => {
+  if (currentAudio) {
+    currentAudio.currentTime = e.target.value;
+  }
+};
 
 // Update volume in real-time while a song is playing
 volumeSlider.oninput = (e) => {
@@ -605,6 +674,8 @@ volumeSlider.oninput = (e) => {
     currentAudio.volume = e.target.value;
   }
 };
+
+
 
 document.getElementById("musicPlayPause").onclick = () => {
   if (!currentAudio) return;
@@ -631,6 +702,7 @@ document.getElementById("musicPlayPause").onclick = () => {
     scheduleNextFlyer(); 
     updateDisplay();
 
+volumeSlider.value = 0.5;
 </script>
 </body> 
 </html>
