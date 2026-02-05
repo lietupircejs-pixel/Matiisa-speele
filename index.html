@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Matīt Clicker</title>
+  <title>Matīss Clicker</title>
   <style> 
     /* --- BASE STYLES --- */
     body { 
@@ -189,14 +189,13 @@
 </head> 
 
 <body> 
-  <h1>Matīt clicker</h1> 
-  <p>Click the Matīt</p> 
+  <h1>Matīss clicker</h1> 
+  <p>Click the Matīss</p> 
 
   <img id="addPoint" src="button1.jpg" alt="Add point" draggable="false"> 
 
   <audio id="casinoSound" src="casino.mp3" loop></audio>
   <audio id="aahSound" src="aah.mp3"></audio>
-  <audio id="jackpotSound" src="jackpot.mp3"></audio>
 
   <p style="font-size: 1.8rem; margin-bottom: 5px; font-weight: bold;">€: <span id="score">0.0</span></p> 
   <p style="font-size: 1.1rem; color: #222; margin-top: 0;">Income: €/s <span id="income">0.0</span></p> 
@@ -224,7 +223,7 @@
           <img src="autoclicker.png" class="upgrade-img"> <button id="buyAutoclicker" class="buy-btn">30€</button></div>
       </div>
       <div class="upgrade-item">
-        <div class="upgrade-info"><b>Running Matīt</b><span>+1.0€/s + 2X Mult on first purchase</span></div>
+        <div class="upgrade-info"><b>Running Matīss</b><span>+1.0€/s + 2X Mult on first purchase</span></div>
         <div class="upgrade-right">
           <video src="run.mp4" class="upgrade-img" autoplay loop muted playsinline></video> 
           <button id="buyRunning" class="buy-btn">300€</button>
@@ -269,6 +268,7 @@
 
     <div id="musicTab" class="tab-content">
       <h2 style="text-align: center;">Music Player</h2>
+      <p style="text-align: center; color: #444; font-style: italic; margin-top: -10px;">"Click on the rhythm to get a boost in click power!"</p>
       <div style="text-align:center; margin-bottom:20px; background: rgba(255, 255, 255, 0.2); padding: 15px; border-radius: 15px;">
         <p id="nowPlaying" style="font-weight: bold; margin-bottom: 10px;">No track playing</p>
         <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
@@ -290,7 +290,7 @@
     </div>
 
     <div id="casinoTab" class="tab-content">
-      <h2 style="text-align: center;">Book of Matīt</h2>
+      <h2 style="text-align: center;">Book of Matīss</h2>
       <div style="text-align: center; margin-bottom: 10px;">
         <p>Enter your wager:</p>
         <input type="number" id="betAmount" value="250" min="1" style="padding: 10px; border-radius: 5px; border: 1px solid #444; width: 100px; text-align: center;">
@@ -326,7 +326,6 @@
     let currentBPM = 0;
     let isPlaying = false;
     let currentAudio = null;
-    let lastClickWasMiss = false;
     let updateInterval;
 
     /* --- DOM ELEMENTS --- */
@@ -349,8 +348,23 @@
     const volumeSlider = document.getElementById("musicVolume");
     const progressSlider = document.getElementById("musicProgress");
     const timeDisplay = document.getElementById("timeDisplay");
+    const musicPlayPauseBtn = document.getElementById("musicPlayPause");
     const symbols = ["image1.jpg", "image2.jpg", "image3.jpg", "button1.jpg"];
 
+    /* --- AUDIO POOL --- */
+    const jackpotSounds = [
+      new Audio('jackpot1.mp3'), new Audio('jackpot2.mp3'),
+      new Audio('jackpot3.mp3'), new Audio('jackpot4.mp3')
+    ];
+    jackpotSounds.forEach(s => s.volume = 0.7);
+
+    function playRandomJackpot() {
+      const sound = jackpotSounds[Math.floor(Math.random() * jackpotSounds.length)];
+      sound.currentTime = 0;
+      sound.play().catch(e => console.warn("Audio blocked"));
+    }
+
+    /* --- TRACKS --- */
     let tracks = [
       { id: 0, name: "What if this isn't a slave? - ツユ", file: "song1.mp3", img: "song1.jpg", price: 6767, owned: false, bpm: 117 },
       { id: 1, name: "Mirror Temple - 2Mello", file: "song2.mp3", img: "song2.jpg", price: 6767, owned: false, bpm: 99 },
@@ -369,8 +383,8 @@
     }
 
     function setSkin(skinPath) {
-        currentSkin = skinPath;
-        mainButton.src = skinPath;
+      currentSkin = skinPath;
+      mainButton.src = skinPath;
     }
 
     function updateDisplay() {
@@ -401,80 +415,57 @@
     }
 
     /* --- GAMEPLAY & RHYTHM --- */
-let lastClickTime = 0;
-let rhythmDisabled = false;
+    let lastClickTime = 0;
+    let rhythmDisabled = false;
 
-mainButton.addEventListener("mousedown", (e) => { 
-  const now = Date.now();
-  const clickGap = now - lastClickTime;
-  lastClickTime = now;
+    mainButton.addEventListener("mousedown", (e) => { 
+      const now = Date.now();
+      const clickGap = now - lastClickTime;
+      lastClickTime = now;
 
-  let power = 1 * multiplier;
-  let isRhythmHit = false;
+      let power = 1 * multiplier;
+      let isRhythmHit = false;
 
-  if (currentBPM > 0 && isPlaying && currentAudio) {
-    const beatInterval = 60 / currentBPM; 
-    const doubleTimeInterval = beatInterval / 2;
-    const currentTime = currentAudio.currentTime;
-    const remainder = currentTime % doubleTimeInterval;
-    const windowSize = 0.12; 
+      if (currentBPM > 0 && isPlaying && currentAudio) {
+        const beatInterval = 60 / currentBPM; 
+        const doubleTimeInterval = beatInterval / 2;
+        const remainder = currentAudio.currentTime % doubleTimeInterval;
+        const windowSize = 0.12; 
 
-    // ANTI-SPAM: If clicking faster than 150ms, disable rhythm bonus for 0.5s
-    if (clickGap < 150) {
-      rhythmDisabled = true;
-      setTimeout(() => { rhythmDisabled = false; }, 500);
+        if (clickGap < 150) {
+          rhythmDisabled = true;
+          setTimeout(() => { rhythmDisabled = false; }, 500);
+        }
+
+        if (!rhythmDisabled && (remainder < windowSize || remainder > (doubleTimeInterval - windowSize))) {
+          power *= 5;
+          isRhythmHit = true;
+          showRhythmFeedback(e.clientX, e.clientY);
+          createRhythmText(e.clientX, e.clientY); 
+        }
+      }
+
+      score += power; 
+      updateDisplay(); 
+      
+      const popup = document.createElement("div"); 
+      popup.className = "plus-one"; 
+      if (isRhythmHit) popup.style.color = "#ffeb3b";
+      popup.innerHTML = `+${power.toFixed(0)} <img src="${currentSkin}">`; 
+      popup.style.setProperty("--x", (Math.random() * 80 - 40) + "px"); 
+      popup.style.left = e.clientX + "px"; 
+      popup.style.top = e.clientY + "px"; 
+      document.body.appendChild(popup); 
+      setTimeout(() => popup.remove(), 800); 
+    });
+
+    function showRhythmFeedback(x, y) {
+      const glow = document.createElement("div");
+      glow.style.cssText = `position:fixed; left:${x-50}px; top:${y-50}px; width:100px; height:100px; background:radial-gradient(circle, rgba(255,235,59,0.7) 0%, rgba(255,235,59,0) 70%); border-radius:50%; pointer-events:none; z-index:100; transform:scale(0.5); opacity:1; transition:transform 0.4s ease-out, opacity 0.4s ease-out;`;
+      document.body.appendChild(glow);
+      requestAnimationFrame(() => { glow.style.transform = "scale(2)"; glow.style.opacity = "0"; });
+      setTimeout(() => glow.remove(), 400);
     }
-
-    // Check rhythm condition
-    if (!rhythmDisabled && (remainder < windowSize || remainder > (doubleTimeInterval - windowSize))) {
-      power *= 5;
-      isRhythmHit = true;
-      showRhythmFeedback(e.clientX, e.clientY);
-      createRhythmText(e.clientX, e.clientY); 
-    }
-  }
-
-  score += power; 
-  updateDisplay(); 
-  
-  const popup = document.createElement("div"); 
-  popup.className = "plus-one"; 
-  if (isRhythmHit) popup.style.color = "#ffeb3b";
-  popup.innerHTML = `+${power.toFixed(0)} <img src="${currentSkin}">`; 
-  popup.style.setProperty("--x", (Math.random() * 80 - 40) + "px"); 
-  popup.style.left = e.clientX + "px"; 
-  popup.style.top = e.clientY + "px"; 
-  document.body.appendChild(popup); 
-  setTimeout(() => popup.remove(), 800); 
-});
-
-function showRhythmFeedback(x, y) {
-  const glow = document.createElement("div");
-  // Using inline style for guaranteed placement, but CSS transition for smoothness
-  glow.style.cssText = `
-    position: fixed;
-    left: ${x - 50}px;
-    top: ${y - 50}px;
-    width: 100px;
-    height: 100px;
-    background: radial-gradient(circle, rgba(255,235,59,0.7) 0%, rgba(255,235,59,0) 70%);
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 100;
-    transform: scale(0.5);
-    opacity: 1;
-    transition: transform 0.4s ease-out, opacity 0.4s ease-out;
-  `;
-  document.body.appendChild(glow);
-
-  // Force a reflow to trigger the transition
-  requestAnimationFrame(() => {
-    glow.style.transform = "scale(2)";
-    glow.style.opacity = "0";
-  });
-
-  setTimeout(() => glow.remove(), 400);
-}
 
     function createRhythmText(x, y) {
       const txt = document.createElement("div");
@@ -486,23 +477,8 @@ function showRhythmFeedback(x, y) {
     }
 
     /* --- PURCHASES --- */
-    buyAutoclickerBtn.onclick = () => { 
-      if (score >= autoclickerPrice) { 
-        score -= autoclickerPrice; autoClickers++; autoclickerPrice *= 1.1; updateDisplay(); 
-      } 
-    };
-
-    buyRunningBtn.onclick = () => { 
-      if (score >= runningMatitPrice) { 
-        score -= runningMatitPrice; 
-        if (runningMatitsOwned === 0) multiplier *= 2; // FIXED: Only doubles once
-        runningMatitsOwned++; 
-        runningMatitPrice *= 1.2; 
-        spawnRunningVideo(); 
-        updateDisplay(); 
-      } 
-    };
-
+    buyAutoclickerBtn.onclick = () => { if (score >= autoclickerPrice) { score -= autoclickerPrice; autoClickers++; autoclickerPrice *= 1.1; updateDisplay(); } };
+    buyRunningBtn.onclick = () => { if (score >= runningMatitPrice) { score -= runningMatitPrice; if (runningMatitsOwned === 0) multiplier *= 2; runningMatitsOwned++; runningMatitPrice *= 1.2; spawnRunningVideo(); updateDisplay(); } };
     buyMusicBtn.onclick = () => { if (score >= 1000 && !musicUnlocked) { score -= 1000; musicUnlocked = true; updateDisplay(); } };
     buyCosmeticsBtn.onclick = () => { if (score >= 2500 && !cosmeticsUnlocked) { score -= 2500; cosmeticsUnlocked = true; multiplier *= 1.5; updateDisplay(); } };
     buyCasinoBtn.onclick = () => { if (score >= 5000 && !casinoUnlocked) { score -= 5000; casinoUnlocked = true; multiplier *= 1.5; updateDisplay(); } };
@@ -527,21 +503,9 @@ function showRhythmFeedback(x, y) {
         let rng = Math.random();
         let winAmount = 0, finalSymbols = [];
 
-        if (rng < 0.03) { // 3% Mega Jackpot
-            winAmount = wager * 15; 
-            finalSymbols = ["button1.jpg", "button1.jpg", "button1.jpg"]; 
-        } 
-        else if (rng < 0.28) { // 25% Small Win
-            winAmount = wager * 2; 
-            let p = symbols[Math.floor(Math.random() * 3)]; 
-            finalSymbols = [p, p, p]; 
-        } 
-        else { // 72% Loss
-            winAmount = 0; 
-            do {
-                finalSymbols = [symbols[Math.floor(Math.random() * 4)], symbols[Math.floor(Math.random() * 4)], symbols[Math.floor(Math.random() * 4)]];
-            } while (finalSymbols[0] === finalSymbols[1] && finalSymbols[1] === finalSymbols[2]);
-        }
+        if (rng < 0.05) { winAmount = wager * 10; finalSymbols = ["button1.jpg", "button1.jpg", "button1.jpg"]; } 
+        else if (rng < 0.25) { winAmount = wager * 2; let p = symbols[Math.floor(Math.random() * 3)]; finalSymbols = [p, p, p]; } 
+        else { winAmount = 0; do { finalSymbols = [symbols[Math.floor(Math.random() * 4)], symbols[Math.floor(Math.random() * 4)], symbols[Math.floor(Math.random() * 4)]]; } while (finalSymbols[0] === finalSymbols[1] && finalSymbols[1] === finalSymbols[2]); }
 
         let ticks = 0;
         let interval = setInterval(() => {
@@ -549,6 +513,7 @@ function showRhythmFeedback(x, y) {
             if (ticks <= 20) reels[0].src = symbols[Math.floor(Math.random() * 4)];
             if (ticks <= 30) reels[1].src = symbols[Math.floor(Math.random() * 4)];
             if (ticks <= 40) reels[2].src = symbols[Math.floor(Math.random() * 4)];
+            
             if (ticks === 20) reels[0].src = finalSymbols[0];
             if (ticks === 30) reels[1].src = finalSymbols[1];
             if (ticks >= 40) {
@@ -556,15 +521,16 @@ function showRhythmFeedback(x, y) {
                 reels[2].src = finalSymbols[2];
                 casinoSound.pause();
                 if (winAmount > 0) {
-                    const jsound = new Audio(`jackpot${Math.floor(Math.random() * 4) + 1}.mp3`); jsound.play();
+                    playRandomJackpot(); 
                     slotMessage.textContent = "WIN! +" + winAmount.toFixed(1) + "€";
                     slotMessage.style.color = "green";
+                    score += winAmount;
                 } else {
                     aahSound.play();
                     slotMessage.textContent = "LOST: -" + wager + "€";
                     slotMessage.style.color = "red";
                 }
-                score += winAmount; updateDisplay(); spinBtn.disabled = false;
+                updateDisplay(); spinBtn.disabled = false;
             }
         }, 75);
     };
@@ -576,16 +542,7 @@ function showRhythmFeedback(x, y) {
       tracks.forEach(t => {
         const div = document.createElement("div");
         div.className = "upgrade-item";
-        div.innerHTML = `
-          <div style="display: flex; align-items: center; gap: 15px;">
-            <img src="${t.img}" class="upgrade-img" onerror="this.src='music.png'">
-            <div class="upgrade-info"><b>${t.name}</b><span>${t.owned ? "Owned" : t.price + "€"}</span></div>
-          </div>
-          <div class="upgrade-right">
-            <button class="buy-btn" onclick="handleTrackAction(${t.id})" ${!t.owned && score < t.price ? "disabled" : ""}>
-              ${t.owned ? "Play" : "Buy"}
-            </button>
-          </div>`;
+        div.innerHTML = `<div style="display: flex; align-items: center; gap: 15px;"><img src="${t.img}" class="upgrade-img" onerror="this.src='music.png'"><div class="upgrade-info"><b>${t.name}</b><span>${t.owned ? "Owned" : t.price + "€"}</span></div></div><div class="upgrade-right"><button class="buy-btn" onclick="handleTrackAction(${t.id})" ${!t.owned && score < t.price ? "disabled" : ""}>${t.owned ? "Play" : "Buy"}</button></div>`;
         container.appendChild(div);
       });
     }
@@ -597,6 +554,8 @@ function showRhythmFeedback(x, y) {
       } else if (track.owned) {
         playTrack(track);
       }
+      musicPlayPauseBtn.textContent = "⏸ Pause";
+      isPlaying = true;
     }
 
     function playTrack(track) {
@@ -606,22 +565,20 @@ function showRhythmFeedback(x, y) {
       currentAudio.loop = true;
       currentAudio.volume = volumeSlider.value;
       currentAudio.onloadedmetadata = () => { progressSlider.max = Math.floor(currentAudio.duration); };
-      currentAudio.play().catch(e => console.log("Blocked"));
-      isPlaying = true;
+      currentAudio.play().catch(e => console.warn("Blocked"));
       updateInterval = setInterval(() => {
         if (!currentAudio) return;
         progressSlider.value = currentAudio.currentTime;
         timeDisplay.textContent = `${formatTime(currentAudio.currentTime)} / ${formatTime(currentAudio.duration)}`;
       }, 500);
       document.getElementById("nowPlaying").textContent = "Now Playing: " + track.name;
-      document.getElementById("musicPlayPause").textContent = "⏸ Pause";
     }
 
     function formatTime(s) { if(isNaN(s)) return "0:00"; let m=Math.floor(s/60), sec=Math.floor(s%60); return `${m}:${sec.toString().padStart(2,'0')}`; }
-    
     volumeSlider.oninput = (e) => { if (currentAudio) currentAudio.volume = e.target.value; };
     progressSlider.oninput = (e) => { if (currentAudio) currentAudio.currentTime = e.target.value; };
-    document.getElementById("musicPlayPause").onclick = () => {
+    
+    musicPlayPauseBtn.onclick = function() {
       if (!currentAudio) return;
       if (isPlaying) { currentAudio.pause(); this.textContent = "▶ Play"; } 
       else { currentAudio.play(); this.textContent = "⏸ Pause"; }
@@ -648,19 +605,43 @@ function showRhythmFeedback(x, y) {
         posX += 4; flyBtn.style.left = posX + "px"; flyBtn.style.top = (posY + Math.sin(posX / 50) * 30) + "px";
         if (posX > window.innerWidth + 100) { clearInterval(moveInterval); flyBtn.remove(); }
       }, 10);
-      flyBtn.onclick = () => {
-        clearInterval(moveInterval); score += 1000; updateDisplay();
-        flyBtn.classList.add("fade-out"); setTimeout(() => flyBtn.remove(), 500);
-      };
+      flyBtn.onclick = (e) => {
+  e.stopPropagation(); 
+  clearInterval(moveInterval); 
+  
+  score += 1000; 
+  updateDisplay();
+  
+  // Directly trigger the announcer pool!
+  playRandomJackpot(); 
+
+  flyBtn.classList.add("fade-out"); 
+  setTimeout(() => flyBtn.remove(), 500);
+};
+
+/* --- CHANGED: playRandomJackpot (Robustness check) --- */
+function playRandomJackpot() {
+  const sound = jackpotSounds[Math.floor(Math.random() * jackpotSounds.length)];
+  if (sound) {
+    sound.currentTime = 0;
+    // We add a console log here so you can see in the 'Inspect' tool if it's firing
+    console.log("Announcer triggered!"); 
+    sound.play().catch(e => console.warn("Audio blocked by browser. Click the screen first!"));
+  }
+}
     }
 
     /* --- INIT --- */
     document.getElementById("openShop").onclick = () => { shopMenu.style.display = "block"; }; 
     document.getElementById("closeShop").onclick = () => { shopMenu.style.display = "none"; }; 
+
+    /* --- UPDATED CHEAT CODE LOGIC --- */
     window.addEventListener("keydown", (e) => { 
       userInput += e.key.toLowerCase(); 
-      if (userInput.endsWith(cheatCode)) { score += 10000000; updateDisplay(); userInput = ""; } 
+      if (userInput.length > 4) userInput = userInput.substring(userInput.length - 4);
+      if (userInput === cheatCode) { score += 10000000; updateDisplay(); userInput = ""; } 
     }); 
+
     setInterval(() => { if (!document.hidden) spawnFlyingButton(); }, (30 + Math.random() * 60) * 1000);
     updateDisplay();
 </script>
