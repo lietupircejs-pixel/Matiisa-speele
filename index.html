@@ -17,7 +17,6 @@
       overflow: hidden; 
     } 
 
-    /* --- MAIN BUTTON --- */
     #addPoint { 
       cursor: pointer; 
       height: 40vh; 
@@ -252,19 +251,11 @@
       </div>
     </div>
 
-    <div id="cosmeticsTab" class="tab-content">
-      <h2 style="text-align: center;">Wardrobe</h2>
-      <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; padding: 20px;">
-        <div style="text-align: center;">
-          <img src="button1.jpg" style="width: 80px; height: 80px; border: 2px solid #444; border-radius: 10px; cursor: pointer;" onclick="setSkin('button1.jpg')">
-          <p>Original</p>
-        </div>
-        <div style="text-align: center;">
-          <img src="golden_matit.png" style="width: 80px; height: 80px; border: 2px solid #444; border-radius: 10px; cursor: pointer;" onclick="setSkin('golden_matit.png')">
-          <p>Golden</p>
-        </div>
-      </div>
-    </div>
+<div id="cosmeticsTab" class="tab-content">
+  <h2 style="text-align: center;">Wardrobe</h2>
+  <p style="text-align: center; color: #444; font-style: italic; margin-top: -10px;">"Diffrent Matīss fits for all of your needs"</p>
+  <div id="cosmeticShopList" style="padding: 10px;"></div>
+</div>
 
     <div id="musicTab" class="tab-content">
       <h2 style="text-align: center;">Music Player</h2>
@@ -327,6 +318,10 @@
     let isPlaying = false;
     let currentAudio = null;
     let updateInterval;
+    let lastClickTime = 0;
+    let rhythmDisabled = false;
+    let lastBeatHit = -1;
+    let comboCount = 0;
 
     /* --- DOM ELEMENTS --- */
     const scoreDisplay = document.getElementById("score"); 
@@ -351,7 +346,15 @@
     const musicPlayPauseBtn = document.getElementById("musicPlayPause");
     const symbols = ["image1.jpg", "image2.jpg", "image3.jpg", "button1.jpg"];
 
-    /* --- AUDIO POOL --- */
+    /* --- AUDIO --- */
+    const buySound = new Audio('buy.mp3'); 
+    buySound.volume = 0.3;
+
+    function playBuySound() {
+        buySound.currentTime = 0; 
+        buySound.play().catch(e => console.warn("Audio blocked: Click page first."));
+    }
+
     const jackpotSounds = [
       new Audio('jackpot1.mp3'), new Audio('jackpot2.mp3'),
       new Audio('jackpot3.mp3'), new Audio('jackpot4.mp3')
@@ -360,27 +363,74 @@
 
     function playRandomJackpot() {
       const sound = jackpotSounds[Math.floor(Math.random() * jackpotSounds.length)];
-      sound.currentTime = 0;
-      sound.play().catch(e => console.warn("Audio blocked"));
+      if (sound) {
+        sound.currentTime = 0;
+        sound.play().catch(e => console.warn("Audio blocked"));
+      }
     }
 
     /* --- TRACKS --- */
     let tracks = [
-      { id: 0, name: "What if this isn't a slave? - ツユ", file: "song1.mp3", img: "song1.jpg", price: 6767, owned: false, bpm: 117 },
-      { id: 1, name: "Mirror Temple - 2Mello", file: "song2.mp3", img: "song2.jpg", price: 6767, owned: false, bpm: 99 },
-      { id: 2, name: "Overdose - natori", file: "song3.mp3", img: "song3.jpg", price: 6767, owned: false, bpm: 81 }, 
-      { id: 3, name: "Домик в майнкрафте - Илюша", file: "song4.mp3", img: "song4.jpg", price: 6767, owned: false, bpm: 115 },
-      { id: 4, name: "Haze Haseru Haterumade - ZUTOMAYO", file: "song5.mp3", img: "song5.jpg", price: 8000, owned: false, bpm: 136 },
+      { id: 0, name: "What if this isn't a slave? - ツユ", file: "song1.mp3", img: "song1.jpg", price: 1000, owned: false, bpm: 117 },
+      { id: 1, name: "Mirror Temple - 2Mello", file: "song2.mp3", img: "song2.jpg", price: 1500, owned: false, bpm: 99 },
+      { id: 2, name: "Overdose - natori", file: "song3.mp3", img: "song3.jpg", price: 2500, owned: false, bpm: 81 }, 
+      { id: 3, name: "A house in minecraft - Илюша", file: "song4.mp3", img: "song4.jpg", price: 6767, owned: false, bpm: 115 },
+      { id: 4, name: "Running till the end - ZUTOMAYO", file: "song5.mp3", img: "song5.jpg", price: 8000, owned: false, bpm: 136 },
       { id: 5, name: "Stronger - Kanye West", file: "song6.mp3", img: "song6.jpg", price: 10000, owned: false, bpm: 104 }
     ];
 
+    let cosmetics = [
+  { id: 0, name: "Classic Matīss", img: "button1.jpg", price: 0, owned: true },
+  { id: 1, name: "Golden Matīss", img: "golden_matit.png", price: 5000, owned: false },
+  { id: 2, name: "Cyber Matīss", img: "cyber_matit.png", price: 15000, owned: false }
+];
+
+function initCosmeticShop() {
+  const container = document.getElementById("cosmeticShopList");
+  container.innerHTML = "";
+  cosmetics.forEach(c => {
+    const div = document.createElement("div");
+    div.className = "upgrade-item";
+    div.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 15px;">
+        <img src="${c.img}" class="upgrade-img" onerror="this.src='cosmetics.jpg'">
+        <div class="upgrade-info">
+          <b>${c.name}</b>
+          <span>${c.owned ? "Owned" : c.price + "€"}</span>
+        </div>
+      </div>
+      <div class="upgrade-right">
+        <button class="buy-btn" onclick="handleCosmeticAction(${c.id})" ${!c.owned && score < c.price ? "disabled" : ""}>
+          ${c.owned ? (currentSkin === c.img ? "Equipped" : "Equip") : "Buy"}
+        </button>
+      </div>`;
+    container.appendChild(div);
+  });
+}
+
+function handleCosmeticAction(id) {
+  const item = cosmetics[id];
+  if (!item.owned && score >= item.price) {
+    score -= item.price;
+    item.owned = true;
+    playBuySound();
+    setSkin(item.img);
+  } else if (item.owned) {
+    setSkin(item.img);
+  }
+  updateDisplay();
+  initCosmeticShop(); 
+}
+
     /* --- UI CONTROLS --- */
-    function showTab(tabId) {
-      const contents = document.getElementsByClassName('tab-content');
-      for (let content of contents) content.classList.remove('active-tab');
-      document.getElementById(tabId).classList.add('active-tab');
-      if (tabId === 'musicTab' && musicUnlocked) initMusicShop();
-    }
+function showTab(tabId) {
+  const contents = document.getElementsByClassName('tab-content');
+  for (let content of contents) content.classList.remove('active-tab');
+  document.getElementById(tabId).classList.add('active-tab');
+  
+  if (tabId === 'musicTab' && musicUnlocked) initMusicShop();
+  if (tabId === 'cosmeticsTab' && cosmeticsUnlocked) initCosmeticShop();
+}
 
     function setSkin(skinPath) {
       currentSkin = skinPath;
@@ -415,49 +465,95 @@
     }
 
     /* --- GAMEPLAY & RHYTHM --- */
-    let lastClickTime = 0;
-    let rhythmDisabled = false;
+mainButton.addEventListener("mousedown", (e) => { 
+  playBuySound(); 
 
-    mainButton.addEventListener("mousedown", (e) => { 
-      const now = Date.now();
-      const clickGap = now - lastClickTime;
-      lastClickTime = now;
+  const now = Date.now();
+  const clickGap = now - lastClickTime;
+  lastClickTime = now;
 
-      let power = 1 * multiplier;
-      let isRhythmHit = false;
+  let power = 1 * multiplier;
+  let isRhythmHit = false;
 
-      if (currentBPM > 0 && isPlaying && currentAudio) {
-        const beatInterval = 60 / currentBPM; 
-        const doubleTimeInterval = beatInterval / 2;
-        const remainder = currentAudio.currentTime % doubleTimeInterval;
-        const windowSize = 0.12; 
+  if (currentBPM > 0 && isPlaying && currentAudio) {
+    const beatInterval = 60 / currentBPM; 
+    const halfBeatInterval = beatInterval / 2;
+    const currentTime = currentAudio.currentTime;
+    
+    // We increase the precision of the slot index to distinguish between rapid clicks
+    const currentHalfBeatIndex = Math.floor(currentTime / (halfBeatInterval / 2)); 
+    const remainder = currentTime % halfBeatInterval;
+    const windowSize = 0.12; // Slightly widened to make "Perfects" more consistent
 
-        if (clickGap < 150) {
-          rhythmDisabled = true;
-          setTimeout(() => { rhythmDisabled = false; }, 500);
-        }
-
-        if (!rhythmDisabled && (remainder < windowSize || remainder > (doubleTimeInterval - windowSize))) {
-          power *= 5;
-          isRhythmHit = true;
-          showRhythmFeedback(e.clientX, e.clientY);
-          createRhythmText(e.clientX, e.clientY); 
-        }
+    if (clickGap < 135) { // Optimized for ZUTOMAYO speeds
+      rhythmDisabled = true;
+      if (comboCount > 0) {
+          comboCount = 0;
+          createComboBreakText(e.clientX, e.clientY, "SPAM! RESET");
       }
+      setTimeout(() => { rhythmDisabled = false; }, 1500);
+      return; 
+    }
 
-      score += power; 
+    const inWindow = (remainder < windowSize || remainder > (halfBeatInterval - windowSize));
+    
+    // FIXED: If we are in the window, we MUST reward it unless it's a literal frame-perfect double click
+    if (!rhythmDisabled && inWindow) {
+      if (currentHalfBeatIndex !== lastBeatHit) {
+        isRhythmHit = true;
+        lastBeatHit = currentHalfBeatIndex; 
+        
+        comboCount++;
+        let rhythmMult = 5; 
+        if (comboCount >= 30) rhythmMult = 15;
+        else if (comboCount >= 20) rhythmMult = 10;
+        else if (comboCount >= 10) rhythmMult = 7.5;
+
+        power *= rhythmMult;
+        
+        showRhythmFeedback(e.clientX, e.clientY);
+        createRhythmText(e.clientX, e.clientY, comboCount, rhythmMult); 
+      } else {
+        // This was the "Ghost Hit" area. We now treat it as a messy hit 
+        // to prevent the confusing +1 while keeping the rhythm strict.
+        comboCount = Math.max(0, comboCount - 10);
+        createComboBreakText(e.clientX, e.clientY, "TOO FAST!");
+      }
+    } 
+    else if (!rhythmDisabled && !inWindow) {
+      comboCount = Math.max(0, comboCount - 10);
+      createComboBreakText(e.clientX, e.clientY, "-10 COMBO");
+    }
+  }
+
+  score += power; 
+  updateDisplay();
+  
+  const popup = document.createElement("div"); 
+  popup.className = "plus-one"; 
+  if (isRhythmHit) popup.style.color = "#ffeb3b";
+  // If it's a rhythm hit, show the full power, otherwise show the base 1
+  popup.innerHTML = `+${power.toFixed(0)} <img src="${currentSkin}">`; 
+  popup.style.left = e.clientX + "px"; 
+  popup.style.top = e.clientY + "px"; 
+  document.body.appendChild(popup); 
+  setTimeout(() => popup.remove(), 800); 
+});
+
+/* --- NEW: Missed Beat Monitor --- */
+// Resets combo if user stops clicking for too long (1.5 beats)
+setInterval(() => {
+  if (currentBPM > 0 && isPlaying && comboCount > 0) {
+    const beatIntervalMs = (60 / currentBPM) * 1000;
+    const gracePeriod = beatIntervalMs * 1.5; // Enough time to switch from double-time to half-time
+    
+    if (Date.now() - lastClickTime > gracePeriod) {
+      comboCount = 0;
+      // We don't spawn text here to avoid annoying the user if they just stopped playing
       updateDisplay(); 
-      
-      const popup = document.createElement("div"); 
-      popup.className = "plus-one"; 
-      if (isRhythmHit) popup.style.color = "#ffeb3b";
-      popup.innerHTML = `+${power.toFixed(0)} <img src="${currentSkin}">`; 
-      popup.style.setProperty("--x", (Math.random() * 80 - 40) + "px"); 
-      popup.style.left = e.clientX + "px"; 
-      popup.style.top = e.clientY + "px"; 
-      document.body.appendChild(popup); 
-      setTimeout(() => popup.remove(), 800); 
-    });
+    }
+  }
+}, 100);
 
     function showRhythmFeedback(x, y) {
       const glow = document.createElement("div");
@@ -467,21 +563,30 @@
       setTimeout(() => glow.remove(), 400);
     }
 
-    function createRhythmText(x, y) {
+    function createRhythmText(x, y, combo, mult) {
       const txt = document.createElement("div");
-      txt.textContent = "RHYTHM x5!";
-      txt.style.cssText = `position:fixed; left:${x}px; top:${y-40}px; color:#ffeb3b; font-weight:bold; pointer-events:none; text-shadow:0 0 5px black; z-index:101;`;
-      txt.animate([{ opacity: 1, transform: 'translateY(0)' }, { opacity: 0, transform: 'translateY(-50px)' }], { duration: 600 });
+      txt.innerHTML = `COMBO x${combo}<br><span style="font-size:0.8em">BONUS x${mult}</span>`;
+      txt.style.cssText = `position:fixed; left:${x}px; top:${y-60}px; color:#ffeb3b; font-weight:bold; pointer-events:none; text-shadow:2px 2px 5px black; z-index:101; text-align:center; line-height:1;`;
+      txt.animate([{ opacity: 1, transform: 'scale(1) translateY(0)' }, { opacity: 0, transform: 'scale(1.5) translateY(-50px)' }], { duration: 600 });
       document.body.appendChild(txt);
       setTimeout(() => txt.remove(), 600);
     }
 
+    function createComboBreakText(x, y, message) {
+      const txt = document.createElement("div");
+      txt.textContent = message;
+      txt.style.cssText = `position:fixed; left:${x}px; top:${y-60}px; color:#ff4444; font-weight:bold; pointer-events:none; text-shadow:2px 2px 5px black; z-index:101; font-size: 1.5rem;`;
+      txt.animate([{ opacity: 1, transform: 'translateY(0) rotate(0deg)' }, { opacity: 0, transform: 'translateY(100px) rotate(20deg)' }], { duration: 800 });
+      document.body.appendChild(txt);
+      setTimeout(() => txt.remove(), 800);
+    }
+
     /* --- PURCHASES --- */
-    buyAutoclickerBtn.onclick = () => { if (score >= autoclickerPrice) { score -= autoclickerPrice; autoClickers++; autoclickerPrice *= 1.1; updateDisplay(); } };
-    buyRunningBtn.onclick = () => { if (score >= runningMatitPrice) { score -= runningMatitPrice; if (runningMatitsOwned === 0) multiplier *= 2; runningMatitsOwned++; runningMatitPrice *= 1.2; spawnRunningVideo(); updateDisplay(); } };
-    buyMusicBtn.onclick = () => { if (score >= 1000 && !musicUnlocked) { score -= 1000; musicUnlocked = true; updateDisplay(); } };
-    buyCosmeticsBtn.onclick = () => { if (score >= 2500 && !cosmeticsUnlocked) { score -= 2500; cosmeticsUnlocked = true; multiplier *= 1.5; updateDisplay(); } };
-    buyCasinoBtn.onclick = () => { if (score >= 5000 && !casinoUnlocked) { score -= 5000; casinoUnlocked = true; multiplier *= 1.5; updateDisplay(); } };
+    buyAutoclickerBtn.onclick = () => { if (score >= autoclickerPrice) { score -= autoclickerPrice; autoClickers++; autoclickerPrice *= 1.1; playBuySound(); updateDisplay(); } };
+    buyRunningBtn.onclick = () => { if (score >= runningMatitPrice) { score -= runningMatitPrice; if (runningMatitsOwned === 0) multiplier *= 2; runningMatitsOwned++; runningMatitPrice *= 1.2; spawnRunningVideo(); playBuySound(); updateDisplay(); } };
+    buyMusicBtn.onclick = () => { if (score >= 1000 && !musicUnlocked) { score -= 1000; musicUnlocked = true; playBuySound(); updateDisplay(); } };
+    buyCosmeticsBtn.onclick = () => { if (score >= 2500 && !cosmeticsUnlocked) { score -= 2500; cosmeticsUnlocked = true; multiplier *= 1.5; playBuySound(); updateDisplay(); } };
+    buyCasinoBtn.onclick = () => { if (score >= 5000 && !casinoUnlocked) { score -= 5000; casinoUnlocked = true; multiplier *= 1.5; playBuySound(); updateDisplay(); } };
 
     /* --- PASSIVE INCOME --- */
     setInterval(() => { 
@@ -550,7 +655,7 @@
     function handleTrackAction(id) {
       const track = tracks[id];
       if (!track.owned && score >= track.price) {
-        score -= track.price; track.owned = true; updateDisplay(); playTrack(track); 
+        score -= track.price; track.owned = true; playBuySound(); updateDisplay(); playTrack(track); 
       } else if (track.owned) {
         playTrack(track);
       }
@@ -595,9 +700,10 @@
       document.body.appendChild(vid); 
     }
 
-    function spawnFlyingButton() {
-      const flyBtn = document.createElement("img");
-      flyBtn.src = "button1.jpg"; flyBtn.className = "flying-button";
+function spawnFlyingButton() {
+  const flyBtn = document.createElement("img");
+  flyBtn.src = currentSkin; 
+  flyBtn.className = "flying-button";
       let posY = Math.random() * (window.innerHeight - 100), posX = -100;
       flyBtn.style.top = posY + "px"; flyBtn.style.left = posX + "px";
       document.body.appendChild(flyBtn);
@@ -606,36 +712,20 @@
         if (posX > window.innerWidth + 100) { clearInterval(moveInterval); flyBtn.remove(); }
       }, 10);
       flyBtn.onclick = (e) => {
-  e.stopPropagation(); 
-  clearInterval(moveInterval); 
-  
-  score += 1000; 
-  updateDisplay();
-  
-  // Directly trigger the announcer pool!
-  playRandomJackpot(); 
-
-  flyBtn.classList.add("fade-out"); 
-  setTimeout(() => flyBtn.remove(), 500);
-};
-
-/* --- CHANGED: playRandomJackpot (Robustness check) --- */
-function playRandomJackpot() {
-  const sound = jackpotSounds[Math.floor(Math.random() * jackpotSounds.length)];
-  if (sound) {
-    sound.currentTime = 0;
-    // We add a console log here so you can see in the 'Inspect' tool if it's firing
-    console.log("Announcer triggered!"); 
-    sound.play().catch(e => console.warn("Audio blocked by browser. Click the screen first!"));
-  }
-}
+        e.stopPropagation(); 
+        clearInterval(moveInterval); 
+        score += 1000; 
+        updateDisplay();
+        playRandomJackpot(); 
+        flyBtn.classList.add("fade-out"); 
+        setTimeout(() => flyBtn.remove(), 500);
+      };
     }
 
     /* --- INIT --- */
     document.getElementById("openShop").onclick = () => { shopMenu.style.display = "block"; }; 
     document.getElementById("closeShop").onclick = () => { shopMenu.style.display = "none"; }; 
 
-    /* --- UPDATED CHEAT CODE LOGIC --- */
     window.addEventListener("keydown", (e) => { 
       userInput += e.key.toLowerCase(); 
       if (userInput.length > 4) userInput = userInput.substring(userInput.length - 4);
