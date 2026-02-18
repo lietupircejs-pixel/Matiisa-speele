@@ -618,11 +618,15 @@ setInterval(() => {
     buyCosmeticsBtn.onclick = () => { if (score >= 2500 && !cosmeticsUnlocked) { score -= 2500; cosmeticsUnlocked = true; multiplier *= 1.5; playBuySound(); updateDisplay(); } };
     buyCasinoBtn.onclick = () => { if (score >= 5000 && !casinoUnlocked) { score -= 5000; casinoUnlocked = true; multiplier *= 1.5; playBuySound(); updateDisplay(); } };
 
-    /* --- PASSIVE INCOME --- */
-    setInterval(() => { 
-      let totalBaseIncome = (autoClickers * 0.1) + (runningMatitsOwned * 1.0);
-      if (totalBaseIncome > 0) { score += totalBaseIncome * multiplier; updateDisplay(); } 
-    }, 1000);
+setInterval(() => { 
+    // 1. Calculate the total income per second
+    let totalBaseIncome = (autoClickers * 0.1) + (runningMatitsOwned * 1.0);
+    
+    if (totalBaseIncome > 0) { 
+        score += (totalBaseIncome * multiplier) / 10; 
+        updateDisplay(); 
+    } 
+}, 100);
 
     /* --- CASINO LOGIC --- */
     allInBtn.onclick = () => { betInput.value = Math.floor(score); };
@@ -909,3 +913,4 @@ function updateAchievementsUI() {
 </body> 
 
 </html>
+
