@@ -513,7 +513,7 @@ mainButton.addEventListener("mousedown", (e) => {
     // We increase the precision of the slot index to distinguish between rapid clicks
     const currentHalfBeatIndex = Math.floor(currentTime / (halfBeatInterval / 2)); 
     const remainder = currentTime % halfBeatInterval;
-    const windowSize = 0.12; // Slightly widened to make "Perfects" more consistent
+    const windowSize = 0.15; // Slightly widened to make "Perfects" more consistent
 
     if (clickGap < 135) { // Optimized for ZUTOMAYO speeds
       rhythmDisabled = true;
@@ -907,4 +907,5 @@ function updateAchievementsUI() {
 }
 </script>
 </body> 
+
 </html>
