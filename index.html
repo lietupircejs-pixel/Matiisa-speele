@@ -39,6 +39,14 @@
     .shop-btn:hover { transform: scale(1.1); } 
     .shop-icon { height: 60px; width: auto; } 
 
+    /* Apply to all shop and upgrade images */
+.shop-icon, .upgrade-img, .upgrade-right video {
+  image-rendering: -moz-pixelated;    /* Firefox */
+  image-rendering: pixelated;         /* Chrome/Safari */
+  /* For older versions of browsers */
+  image-rendering: crisp-edges;
+}
+
     /* --- THE SHOP MENU --- */
     #shopMenu { 
       display: none; 
@@ -913,4 +921,5 @@ function updateAchievementsUI() {
 </body> 
 
 </html>
+
 
