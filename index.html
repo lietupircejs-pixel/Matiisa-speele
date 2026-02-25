@@ -144,6 +144,19 @@
       will-change: translate, rotate;
     } 
 
+    #addPoint { 
+  cursor: pointer; 
+  /* Set both height AND width to create a square 'frame' */
+  height: 40vh; 
+  width: 40vh; 
+  /* This ensures the image fills the 40x40 area without stretching */
+  object-fit: contain; 
+  margin: 20px 0; 
+  transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+  -webkit-user-drag: none; 
+  z-index: 5; 
+}
+
     @keyframes runAround {
       0%   { translate: 0vw 0vh; rotate: 180deg; }
       24.9% { rotate: 180deg; }
@@ -157,7 +170,17 @@
     }
 
     .plus-one { position: absolute; font-size: 26px; font-weight: bold; pointer-events: none; animation: floatUp 0.8s ease-out forwards; z-index: 20; } 
-    .plus-one img { height: 30px; width: auto; vertical-align: middle; margin-left: 5px; } 
+   .plus-one img { 
+  height: 30px; 
+  width: 30px; /* Force a square box */
+  object-fit: contain; /* Keep the ratio inside that box */
+  vertical-align: middle; 
+  margin-left: 5px; 
+}
+
+#reel1, #reel2, #reel3 {
+  object-fit: cover; /* Or 'contain' if you don't want cropping */
+}
     @keyframes floatUp { 
       from { opacity: 1; transform: translate(-50%, -50%); } 
       to { transform: translate(calc(-50% + var(--x)), -150px); opacity: 0; } 
@@ -260,7 +283,7 @@
           <img src="autoclicker.png" class="upgrade-img"> <button id="buyAutoclicker" class="buy-btn">30€</button></div>
       </div>
       <div class="upgrade-item">
-        <div class="upgrade-info"><b>Running Matīss</b><span>+1.0€/s + 2X Mult on first purchase</span></div>
+        <div class="upgrade-info"><b>Running Osage</b><span>+1.0€/s + 2X Mult on first purchase</span></div>
         <div class="upgrade-right">
           <video src="run.mp4" class="upgrade-img" autoplay loop muted playsinline></video> 
           <button id="buyRunning" class="buy-btn">300€</button>
@@ -418,9 +441,12 @@
     ];
 
     let cosmetics = [
-  { id: 0, name: "Classic Matīss", img: "button1.jpg", price: 0, owned: true },
-  { id: 1, name: "Golden Matīss", img: "golden_matit.png", price: 5000, owned: false },
-  { id: 2, name: "Cyber Matīss", img: "cyber_matit.png", price: 15000, owned: false }
+  { id: 0, name: "Classic Matīss", img: "button1.jpeg", price: 0, owned: true },
+  { id: 1, name: "Geeked Matīss", img: "geekedout.jpeg", price: 5000, owned: false },
+  { id: 2, name: "Gasmask Matīss", img: "war.jpeg", price: 10000, owned: false },
+  { id: 3, name: "Patriotic Matīss", img: "murica.jpeg", price: 15000, owned: false },
+  { id: 4, name: "Matīss Diet", img: "drugs.jpeg", price: 20000, owned: false },
+  { id: 5, name: "Locked in Matīss", img: "lockedin.jpeg", price: 25000, owned: false }
 ];
 
 function initCosmeticShop() {
