@@ -49,15 +49,15 @@
     .shop-icon { height: 60px; width: auto; } 
 
     /* --- THE SHOP MENU --- */
-    #shopMenu { 
+#shopMenu, #settingsMenu { 
       display: none; 
       position: fixed; 
       top: 50%; 
       left: 50%; 
       transform: translate(-50%, -50%); 
-      width: 70vh;  
-      max-width: 90vw; 
-      height: 70vh; 
+      width: 80vw; 
+      max-width: 600px; 
+      height: 80vh; 
       background-color: #d1cbcb; 
       border: 5px solid #444; 
       border-radius: 20px; 
@@ -66,7 +66,7 @@
       box-shadow: 0 0 60px rgba(0,0,0,0.6); 
       box-sizing: border-box; 
       overflow-y: auto; 
-    } 
+    }
 
     #closeShop { 
       position: absolute; 
@@ -78,6 +78,19 @@
       color: #444; 
       z-index: 101;
     } 
+
+@media (max-width: 600px) {
+      .shop-icon { height: 100px; } /* Larger icons for thumbs */
+      
+      #shopMenu, #settingsMenu { 
+        width: 95vw; 
+        height: 90vh; 
+        padding: 15px; 
+      }
+
+      .upgrade-info b { font-size: 1.1rem; } 
+      .buy-btn { padding: 15px 10px; font-size: 1.1rem; } /* Chonky buttons for tapping */
+    }
 
     .shop-nav {
       display: flex;
@@ -212,9 +225,9 @@
   <button id="openShop" class="shop-btn"> 
     <img src="shop.png" class="shop-icon" draggable="false"> 
   </button> 
-  <button id="openSettings" class="shop-btn"> 
-    <img src="gear.png" class="shop-icon" draggable="false"
-  </button> 
+<button id="openSettings" class="shop-btn"> 
+  <img src="gear.png" class="shop-icon" draggable="false"> 
+</button> 
 </div>
 
 <div id="settingsMenu" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 400px; max-height: 80vh; background-color: #d1cbcb; border: 5px solid #444; border-radius: 20px; z-index: 200; padding: 25px; box-shadow: 0 0 60px rgba(0,0,0,0.6); overflow-y: auto;">
@@ -390,30 +403,21 @@
     buySound.volume = 0.3;
 
 function handleInput(e) {
-  e.preventDefault(); 
+  if (e.type === "touchstart") e.preventDefault(); 
   const input = e.type === "touchstart" ? e.touches[0] : e;
-  
-  // Add the pressed look immediately
   mainButton.classList.add("pressed");
-  
   processClick(input.clientX, input.clientY);
 }
 
 function handleRelease() {
-  // Remove the pressed look only when the user lets go
   mainButton.classList.remove("pressed");
 }
 
 mainButton.addEventListener("mousedown", handleInput);
 mainButton.addEventListener("touchstart", handleInput, { passive: false });
 
-// Listen globally for the release so it works even if the cursor moves off the button
 window.addEventListener("mouseup", handleRelease);
 window.addEventListener("touchend", handleRelease);
-
-// Remove all other mainButton listeners and use ONLY these two
-mainButton.addEventListener("mousedown", handleInput);
-mainButton.addEventListener("touchstart", handleInput, { passive: false });
 
 function processClick(clientX, clientY) {
   playBuySound(); 
