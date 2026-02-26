@@ -359,8 +359,10 @@
     let lastBeatHit = -1;
     let comboCount = 0;
     let userInput = ""; 
-    const cheatCode = "ztmy"; 
+    let hasHitMegaJackpot = false;
+    let hasUsedCheatCode = false;
 
+    const cheatCode = "ztmy"; 
     const scoreDisplay = document.getElementById("score"); 
     const incomeDisplay = document.getElementById("income"); 
     const mainButton = document.getElementById("addPoint");
@@ -549,7 +551,7 @@
       let rng = Math.random();
       let winAmount = 0, finalSymbols = [];
 
-      if (rng < 0.05) { winAmount = wager * 10; finalSymbols = ["button1.jpg", "button1.jpg", "button1.jpg"]; } 
+      if (rng < 0.05) { winAmount = wager * 10; finalSymbols = ["button1.jpg", "button1.jpg", "button1.jpg"]; hasHitMegaJackpot = true;} 
       else if (rng < 0.25) { winAmount = wager * 2; let p = symbols[Math.floor(Math.random() * 3)]; finalSymbols = [p, p, p]; } 
       else { winAmount = 0; do { finalSymbols = [symbols[Math.floor(Math.random() * 4)], symbols[Math.floor(Math.random() * 4)], symbols[Math.floor(Math.random() * 4)]]; } while (finalSymbols[0] === finalSymbols[1] && finalSymbols[1] === finalSymbols[2]); }
 
@@ -588,17 +590,33 @@
       { id: 1, name: "Mirror Temple - 2Mello", file: "song2.mp3", img: "song2.jpg", price: 1500, owned: false, bpm: 99 },
       { id: 2, name: "Overdose - natori", file: "song3.mp3", img: "song3.jpg", price: 2500, owned: false, bpm: 81 }, 
       { id: 3, name: "A house in minecraft - Илюша", file: "song4.mp3", img: "song4.jpg", price: 6767, owned: false, bpm: 115 },
-      { id: 4, name: "Running till the end - ZUTOMAYO", file: "song5.mp3", img: "song5.jpg", price: 8000, owned: false, bpm: 136 },
-      { id: 5, name: "Stronger - Kanye West", file: "song6.mp3", img: "song6.jpg", price: 10000, owned: false, bpm: 104 }
+      { id: 4, name: "Running till the end - ZUTOMAYO", file: "song5.mp3", img: "song5.jpg", price: 7500, owned: false, bpm: 136 },
+      { id: 5, name: "Stronger - Kanye West", file: "song6.mp3", img: "song6.jpg", price: 10000, owned: false, bpm: 104 },
+      { id: 6, name: "Value - Ado", file: "song7.mp3", img: "song7.jpg", price: 12500, owned: false, bpm: 80 },
+      { id: 7, name: "Your waves - Shipsea", file: "song8.mp3", img: "song8.jpg", price: 15000, owned: false, bpm: 81 },
+      { id: 8, name: "Song of the night walkers - Creepy Nuts", file: "song9.mp3", img: "song9.jpg", price: 20000, owned: false, bpm: 115 }
     ];
 
-    function initMusicShop() {
+function initMusicShop() {
       const container = document.getElementById("musicShopList");
       container.innerHTML = "";
       tracks.forEach(t => {
         const div = document.createElement("div");
         div.className = "upgrade-item";
-        div.innerHTML = `<div style="display: flex; align-items: center; gap: 15px;"><img src="${t.img}" class="upgrade-img" onerror="this.src='music.png'"><div class="upgrade-info"><b>${t.name}</b><span>${t.owned ? "Owned" : t.price + "€"}</span></div></div><div class="upgrade-right"><button class="buy-btn" onclick="handleTrackAction(${t.id})" ${!t.owned && score < t.price ? "disabled" : ""}>${t.owned ? "Play" : "Buy"}</button></div>`;
+        const isCurrent = currentAudio && currentAudio.src.includes(t.file);
+        div.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 15px;">
+            <img src="${t.img}" class="upgrade-img" onerror="this.src='music.png'">
+            <div class="upgrade-info">
+              <b>${t.name}</b>
+              <span>${t.owned ? "Owned" : t.price + "€"}</span>
+            </div>
+          </div>
+          <div class="upgrade-right">
+            <button class="buy-btn" onclick="handleTrackAction(${t.id})" ${!t.owned && score < t.price ? "disabled" : ""}>
+              ${t.owned ? (isCurrent ? "Now Playing" : "Play") : "Buy"}
+            </button>
+          </div>`;
         container.appendChild(div);
       });
     }
@@ -606,12 +624,17 @@
     function handleTrackAction(id) {
       const track = tracks[id];
       if (!track.owned && score >= track.price) {
-        score -= track.price; track.owned = true; playBuySound(); updateDisplay(); playTrack(track); 
+        score -= track.price; 
+        track.owned = true; 
+        playBuySound(); 
+        updateDisplay(); 
+        playTrack(track); 
       } else if (track.owned) {
         playTrack(track);
       }
       document.getElementById("musicPlayPause").textContent = "⏸ Pause";
       isPlaying = true;
+      initMusicShop(); 
     }
 
     function playTrack(track) {
@@ -702,17 +725,23 @@
     }
 
     let achievements = [
-      { id: 0, name: "Getting Started", desc: "Click Matīss for the first time", condition: () => score >= 1, unlocked: false },
-      { id: 1, name: "Small Business", desc: "Reach 500€", condition: () => score >= 500, unlocked: false },
-      { id: 2, name: "Automation", desc: "Buy your first Autoclicker", condition: () => autoClickers > 0, unlocked: false },
-      { id: 3, name: "The Collector", desc: "Unlock the Wardrobe", condition: () => cosmeticsUnlocked, unlocked: false }
+      { id: 0, name: "The Beggining", desc: "Click Matīss for the first time", condition: () => score >= 1, unlocked: false },
+      { id: 1, name: "The Upstart", desc: "Reach 500€", condition: () => score >= 500, unlocked: false },
+      { id: 2, name: "The Autamaton", desc: "Buy your first Autoclicker", condition: () => autoClickers > 0, unlocked: false },
+      { id: 3, name: "The Collector", desc: "Unlock the Wardrobe", condition: () => cosmeticsUnlocked, unlocked: false },
+      { id: 4, name: "The Supermodel", desc: "Buy Locked in Matīss", condition: () => cosmetics.find(c => c.id === 5)?.owned || false, unlocked: false },
+      { id: 5, name: "The General", desc: "Have an army of 10 running Osages", condition: () => runningMatitsOwned > 9, unlocked: false },
+      { id: 6, name: "The Gambler", desc: "Get a MEGA JACKPOT in the Casino", condition: () => hasHitMegaJackpot, unlocked: false },
+      { id: 7, name: "The DJ", desc: "Unlock all of the songs", condition: () => tracks.every(t => t.owned), unlocked: false },
+      { id: 8, name: "The Addict", desc: "Get 1 million €", condition: () => score >= 1000000, unlocked: false },
+      { id: 9, name: "The Exploiter", desc: "Use the secret code", condition: () => hasUsedCheatCode, unlocked: false },
     ];
 
     setInterval(() => {
       achievements.forEach(ach => {
         if (!ach.unlocked && ach.condition()) {
           ach.unlocked = true;
-          if (settingsMenu.style.display !== "none") updateAchievementsUI();
+          if (settingsMenu.style.display !== "none") updateAchievementsUI(); playRandomJackpot();
         }
       });
     }, 1000);
@@ -748,21 +777,33 @@
       }, (30 + Math.random() * 60) * 1000);
     }
 
-    function spawnFlyingButton() {
+function spawnFlyingButton() {
       const flyBtn = document.createElement("img");
       flyBtn.src = currentSkin; 
       flyBtn.className = "flying-button";
-      flyBtn.style.top = (Math.random() * (window.innerHeight - 100)) + "px"; 
+      const startTop = Math.random() * (window.innerHeight - 200) + 100;
       flyBtn.style.left = "-100px";
       document.body.appendChild(flyBtn);
 
       let posX = -100;
+      let angle = 0; 
+      let speed = 6.7; 
+      let amplitude = 50; 
+      let waveSpeed = 0.1; 
       let moveInterval = setInterval(() => {
-        posX += 3;
-        flyBtn.style.left = posX + "px";
-        if (posX > window.innerWidth) { clearInterval(moveInterval); flyBtn.remove(); }
-      }, 20);
+        posX += speed;
+        angle += waveSpeed;
+        
+        let posY = startTop + Math.sin(angle) * amplitude;
 
+        flyBtn.style.left = posX + "px";
+        flyBtn.style.top = posY + "px";
+
+        if (posX > window.innerWidth + 100) { 
+          clearInterval(moveInterval); 
+          flyBtn.remove(); 
+        }
+      }, 16);
       flyBtn.onclick = (e) => {
         e.stopPropagation(); 
         clearInterval(moveInterval); 
@@ -833,7 +874,7 @@
 
     window.addEventListener("keydown", (e) => { 
       userInput += e.key.toLowerCase(); 
-      if (userInput.slice(-4) === cheatCode) { score += 10000000; updateDisplay(); userInput = ""; } 
+      if (userInput.slice(-4) === cheatCode) { hasUsedCheatCode = true; score += 10000000; updateDisplay(); userInput = ""; } 
     }); 
 
     updateDisplay();
